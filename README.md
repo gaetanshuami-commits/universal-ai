@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# Universal AI
 
-## Getting Started
+Plateforme universelle d'intelligence artificielle multi-modèles.
 
-First, run the development server:
+## Vision
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Universal AI rassemble dans un même produit :
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- assistant conversationnel avancé ;
+- développement de projets complexes ;
+- environnement AI Code ;
+- agents autonomes spécialisés ;
+- mémoire longue durée ;
+- recherche web et documentaire ;
+- génération d'images, d'audio et de vidéo ;
+- outils pour entrepreneurs, joueurs, streamers et créateurs.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Innovations principales
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Je veux créer cette entreprise
+2. AI Company
+3. AI Creator Universe
+4. AI Streamer
+5. AI Gamer
+6. AI Coach Live
+7. AI Camera
+8. AI Life
+9. AI World Memory
+10. AI Scientist
+11. AI Movie Studio
+12. AI Builder
+13. AI Impossible
+14. AI Time Machine
+15. AI Dream
+16. AI Universe
+17. AI Parallel Lab
 
-## Learn More
+## Développement
 
-To learn more about Next.js, take a look at the following resources:
+Le projet est développé dans :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+C:\Users\gaeta\universal-ai
