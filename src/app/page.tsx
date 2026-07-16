@@ -8,23 +8,41 @@ import {
   useState,
 } from "react";
 import {
+  ArrowRight,
+  Atom,
   Bot,
+  Boxes,
   BrainCircuit,
-  Building2,
+  BriefcaseBusiness,
   Camera,
   ChevronDown,
+  CircleUserRound,
   Code2,
+  Command,
+  FileSearch,
   Gamepad2,
-  ImageIcon,
+  Globe2,
+  Image,
+  Infinity,
+  LayoutGrid,
   Menu,
+  MessageSquareText,
   Mic,
+  MoreHorizontal,
   Paperclip,
   Plus,
+  Radio,
+  Search,
   Send,
+  Settings2,
+  ShieldCheck,
   Sparkles,
+  Square,
+  TerminalSquare,
   Video,
   WandSparkles,
   X,
+  Zap,
 } from "lucide-react";
 
 type Provider = "auto" | "openai" | "anthropic" | "gemini";
@@ -35,26 +53,135 @@ interface Message {
   content: string;
 }
 
-const modules = [
-  { label: "Assistant universel", icon: Bot },
-  { label: "AI Code", icon: Code2 },
-  { label: "Créer cette entreprise", icon: Building2 },
-  { label: "AI Company", icon: BrainCircuit },
-  { label: "AI Gamer", icon: Gamepad2 },
-  { label: "AI Streamer", icon: Video },
-  { label: "AI Creator", icon: ImageIcon },
-  { label: "AI Camera", icon: Camera },
-  { label: "AI Impossible", icon: WandSparkles },
-];
+interface NavigationItem {
+  label: string;
+  description: string;
+  icon: typeof Bot;
+  badge?: string;
+}
 
-const initialMessages: Message[] = [
+const navigationGroups: Array<{
+  label: string;
+  items: NavigationItem[];
+}> = [
   {
-    id: "welcome",
-    role: "assistant",
-    content:
-      "Bonjour. Je suis Universal AI. Décris ton objectif : je peux réfléchir, créer, coder et coordonner plusieurs intelligences artificielles.",
+    label: "Intelligence",
+    items: [
+      {
+        label: "Assistant universel",
+        description: "Raisonnement et exécution",
+        icon: BrainCircuit,
+      },
+      {
+        label: "Recherche profonde",
+        description: "Web, sources et documents",
+        icon: FileSearch,
+      },
+      {
+        label: "AI Code",
+        description: "Développement agentique",
+        icon: Code2,
+        badge: "Pro",
+      },
+    ],
+  },
+  {
+    label: "Création",
+    items: [
+      {
+        label: "Créer cette entreprise",
+        description: "De l’idée au lancement",
+        icon: BriefcaseBusiness,
+        badge: "New",
+      },
+      {
+        label: "AI Company",
+        description: "Équipe d’agents IA",
+        icon: Boxes,
+      },
+      {
+        label: "AI Creator",
+        description: "Images, vidéo et médias",
+        icon: Image,
+      },
+    ],
+  },
+  {
+    label: "Expériences",
+    items: [
+      {
+        label: "AI Gamer",
+        description: "Copilote de jeu temps réel",
+        icon: Gamepad2,
+      },
+      {
+        label: "AI Streamer",
+        description: "Studio live intelligent",
+        icon: Radio,
+      },
+      {
+        label: "AI Camera",
+        description: "Comprendre le monde",
+        icon: Camera,
+      },
+      {
+        label: "AI Impossible",
+        description: "Solutions hors norme",
+        icon: Infinity,
+      },
+    ],
   },
 ];
+
+const launchActions = [
+  {
+    title: "Créer une entreprise",
+    description:
+      "Transformez une idée en marque, business plan, plateforme et stratégie de lancement.",
+    icon: BriefcaseBusiness,
+    prompt:
+      "Je veux créer cette entreprise. Aide-moi à structurer le projet complet de l'idée au lancement.",
+    accent: "violet",
+  },
+  {
+    title: "Construire un produit",
+    description:
+      "Architecture, code, base de données, tests, sécurité et déploiement.",
+    icon: TerminalSquare,
+    prompt:
+      "Je veux construire un produit numérique complet. Commence par définir l'architecture professionnelle.",
+    accent: "cyan",
+  },
+  {
+    title: "Lancer une recherche",
+    description:
+      "Analysez le web, vos fichiers et plusieurs sources avec une synthèse vérifiable.",
+    icon: Globe2,
+    prompt:
+      "Lance une recherche approfondie et structurée sur le sujet suivant :",
+    accent: "blue",
+  },
+  {
+    title: "Créer un contenu",
+    description:
+      "Campagne, vidéo, identité visuelle, présentation ou stratégie éditoriale.",
+    icon: WandSparkles,
+    prompt:
+      "Crée une stratégie de contenu premium et complète pour mon projet.",
+    accent: "gold",
+  },
+];
+
+const capabilities = [
+  "Raisonnement avancé",
+  "Recherche web",
+  "Création de code",
+  "Analyse de fichiers",
+  "Images et vidéo",
+  "Agents autonomes",
+];
+
+const initialMessages: Message[] = [];
 
 export default function Home() {
   const [messages, setMessages] =
@@ -64,12 +191,21 @@ export default function Home() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeProvider, setActiveProvider] = useState("");
+  const [activeNav, setActiveNav] = useState("Assistant universel");
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
   }, [messages]);
+
+  function applyPrompt(prompt: string) {
+    setInput(prompt);
+  }
 
   async function sendMessage(event?: FormEvent) {
     event?.preventDefault();
@@ -171,7 +307,10 @@ export default function Home() {
           ? error.message
           : "Une erreur inattendue est survenue.";
 
-      if (errorMessage !== "The user aborted a request.") {
+      if (
+        errorMessage !== "The user aborted a request." &&
+        errorMessage !== "This operation was aborted"
+      ) {
         setMessages((currentMessages) =>
           currentMessages.map((message) =>
             message.id === assistantId
@@ -208,192 +347,482 @@ export default function Home() {
       stopGeneration();
     }
 
-    setMessages(initialMessages);
+    setMessages([]);
+    setInput("");
     setActiveProvider("");
     setSidebarOpen(false);
   }
 
+  const hasConversation = messages.length > 0;
+
   return (
-    <main className="platform-shell">
+    <main className="app-shell">
       <aside
-        className={`platform-sidebar ${
-          sidebarOpen ? "sidebar-open" : ""
+        className={`sidebar ${
+          sidebarOpen ? "sidebar-visible" : ""
         }`}
       >
-        <div className="sidebar-header">
-          <div className="brand-mark">
-            <Sparkles size={20} />
+        <div className="brand">
+          <div className="brand-symbol" aria-hidden="true">
+            <span className="brand-core">U</span>
+            <span className="brand-orbit orbit-one" />
+            <span className="brand-orbit orbit-two" />
           </div>
 
-          <div>
-            <strong>Universal AI</strong>
-            <span>Intelligence Operating System</span>
+          <div className="brand-copy">
+            <strong>UNIVERSAL</strong>
+            <span>ARTIFICIAL INTELLIGENCE</span>
           </div>
 
           <button
-            className="mobile-close"
+            className="sidebar-close"
+            type="button"
             onClick={() => setSidebarOpen(false)}
-            aria-label="Fermer le menu"
+            aria-label="Fermer la navigation"
           >
             <X size={20} />
           </button>
         </div>
 
         <button
-          className="new-conversation"
+          className="new-chat-button"
+          type="button"
           onClick={newConversation}
         >
           <Plus size={18} />
-          Nouvelle conversation
+          <span>Nouvelle mission</span>
+          <kbd>⌘ N</kbd>
         </button>
 
-        <nav className="module-navigation">
-          {modules.map(({ label, icon: Icon }, index) => (
-            <button
-              key={label}
-              className={index === 0 ? "active" : ""}
-            >
-              <Icon size={18} />
-              {label}
-            </button>
-          ))}
-        </nav>
+        <button className="sidebar-search" type="button">
+          <Search size={17} />
+          <span>Rechercher</span>
+          <kbd>⌘ K</kbd>
+        </button>
 
-        <div className="sidebar-footer">
-          <div className="account-avatar">GS</div>
-          <div>
-            <strong>Gaëtan Shuami</strong>
-            <span>Fondateur</span>
+        <div className="navigation-scroll">
+          {navigationGroups.map((group) => (
+            <section
+              className="navigation-group"
+              key={group.label}
+            >
+              <div className="navigation-label">
+                {group.label}
+              </div>
+
+              <nav>
+                {group.items.map(
+                  ({
+                    label,
+                    description,
+                    icon: Icon,
+                    badge,
+                  }) => {
+                    const isActive = activeNav === label;
+
+                    return (
+                      <button
+                        key={label}
+                        className={`navigation-item ${
+                          isActive ? "navigation-item-active" : ""
+                        }`}
+                        type="button"
+                        onClick={() => {
+                          setActiveNav(label);
+                          setSidebarOpen(false);
+                        }}
+                      >
+                        <span className="navigation-icon">
+                          <Icon size={17} />
+                        </span>
+
+                        <span className="navigation-copy">
+                          <strong>{label}</strong>
+                          <small>{description}</small>
+                        </span>
+
+                        {badge && (
+                          <span className="navigation-badge">
+                            {badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  },
+                )}
+              </nav>
+            </section>
+          ))}
+        </div>
+
+        <div className="sidebar-bottom">
+          <button className="workspace-card" type="button">
+            <span className="workspace-icon">
+              <LayoutGrid size={18} />
+            </span>
+
+            <span>
+              <strong>Workspace principal</strong>
+              <small>1 membre · Plan Founder</small>
+            </span>
+
+            <ChevronDown size={15} />
+          </button>
+
+          <div className="account-panel">
+            <div className="account-avatar">GS</div>
+
+            <div className="account-copy">
+              <strong>Gaëtan Shuami</strong>
+              <span>Administrateur</span>
+            </div>
+
+            <button
+              type="button"
+              aria-label="Options du compte"
+            >
+              <MoreHorizontal size={18} />
+            </button>
           </div>
         </div>
       </aside>
 
       {sidebarOpen && (
         <button
-          className="sidebar-overlay"
+          className="mobile-overlay"
+          type="button"
           onClick={() => setSidebarOpen(false)}
-          aria-label="Fermer le menu"
+          aria-label="Fermer la navigation"
         />
       )}
 
-      <section className="platform-workspace">
-        <header className="workspace-header">
-          <button
-            className="mobile-menu"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Ouvrir le menu"
-          >
-            <Menu size={21} />
-          </button>
+      <section className="workspace">
+        <header className="topbar">
+          <div className="topbar-left">
+            <button
+              className="menu-button"
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Ouvrir la navigation"
+            >
+              <Menu size={20} />
+            </button>
 
-          <div className="workspace-title">
-            <strong>Assistant universel</strong>
-            <span>
-              {activeProvider
-                ? `Propulsé par ${activeProvider}`
-                : "Multi-modèles · mémoire longue · agents"}
-            </span>
+            <div className="breadcrumb">
+              <span>Universal AI</span>
+              <strong>{activeNav}</strong>
+            </div>
           </div>
 
-          <label className="provider-selector">
-            <select
-              value={provider}
-              onChange={(event) =>
-                setProvider(event.target.value as Provider)
-              }
-              disabled={isStreaming}
-              aria-label="Choisir le moteur IA"
+          <div className="topbar-center">
+            <div className="system-status">
+              <span className="status-dot" />
+              Systèmes opérationnels
+            </div>
+          </div>
+
+          <div className="topbar-actions">
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Commandes rapides"
             >
-              <option value="auto">Automatique</option>
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Claude</option>
-              <option value="gemini">Gemini</option>
-            </select>
-            <ChevronDown size={15} />
-          </label>
+              <Command size={18} />
+            </button>
+
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Paramètres"
+            >
+              <Settings2 size={18} />
+            </button>
+
+            <label className="model-selector">
+              <span className="model-emblem">
+                <Atom size={17} />
+              </span>
+
+              <span className="model-copy">
+                <small>Moteur</small>
+                <strong>
+                  {provider === "auto"
+                    ? "Intelligence Auto"
+                    : provider === "openai"
+                      ? "OpenAI"
+                      : provider === "anthropic"
+                        ? "Claude"
+                        : "Gemini"}
+                </strong>
+              </span>
+
+              <select
+                value={provider}
+                onChange={(event) =>
+                  setProvider(event.target.value as Provider)
+                }
+                disabled={isStreaming}
+                aria-label="Sélectionner le moteur IA"
+              >
+                <option value="auto">Automatique</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Claude</option>
+                <option value="gemini">Gemini</option>
+              </select>
+
+              <ChevronDown size={15} />
+            </label>
+          </div>
         </header>
 
-        <div className="conversation-scroll">
-          <div className="conversation">
-            {messages.map((message) => (
-              <article
-                key={message.id}
-                className={`chat-message ${message.role}`}
-              >
-                <div className="message-avatar">
-                  {message.role === "user" ? "GS" : <Sparkles size={18} />}
+        <div className="workspace-body">
+          {!hasConversation ? (
+            <section className="launch-screen">
+              <div className="launch-glow launch-glow-one" />
+              <div className="launch-glow launch-glow-two" />
+
+              <div className="launch-content">
+                <div className="intelligence-badge">
+                  <span>
+                    <Sparkles size={14} />
+                  </span>
+                  UNIVERSAL INTELLIGENCE SYSTEM
                 </div>
 
-                <div className="message-content">
-                  <span className="message-author">
-                    {message.role === "user"
-                      ? "Vous"
-                      : "Universal AI"}
+                <div className="hero-symbol">
+                  <div className="hero-symbol-core">
+                    <Atom size={42} strokeWidth={1.4} />
+                  </div>
+                  <span className="hero-ring hero-ring-one" />
+                  <span className="hero-ring hero-ring-two" />
+                </div>
+
+                <h1>
+                  Que voulez-vous
+                  <span> accomplir aujourd’hui ?</span>
+                </h1>
+
+                <p className="hero-description">
+                  Une plateforme d’intelligence artificielle capable
+                  de réfléchir, rechercher, créer, coder et coordonner
+                  des agents spécialisés dans un seul environnement.
+                </p>
+
+                <div className="capability-row">
+                  {capabilities.map((capability) => (
+                    <span key={capability}>
+                      <Zap size={12} />
+                      {capability}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="launch-grid">
+                  {launchActions.map(
+                    ({
+                      title,
+                      description,
+                      icon: Icon,
+                      prompt,
+                      accent,
+                    }) => (
+                      <button
+                        className={`launch-card launch-card-${accent}`}
+                        key={title}
+                        type="button"
+                        onClick={() => applyPrompt(prompt)}
+                      >
+                        <span className="launch-card-icon">
+                          <Icon size={21} />
+                        </span>
+
+                        <span className="launch-card-content">
+                          <strong>{title}</strong>
+                          <small>{description}</small>
+                        </span>
+
+                        <span className="launch-card-arrow">
+                          <ArrowRight size={17} />
+                        </span>
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section className="conversation-area">
+              <div className="conversation-header">
+                <div>
+                  <span className="conversation-eyebrow">
+                    MISSION ACTIVE
+                  </span>
+                  <h2>Nouvelle conversation</h2>
+                </div>
+
+                <div className="conversation-metadata">
+                  <span>
+                    <ShieldCheck size={14} />
+                    Session sécurisée
                   </span>
 
-                  <p>
-                    {message.content ||
-                      (isStreaming ? "Réflexion en cours…" : "")}
-                  </p>
+                  {activeProvider && (
+                    <span>
+                      <Atom size={14} />
+                      {activeProvider}
+                    </span>
+                  )}
                 </div>
-              </article>
-            ))}
-
-            <div ref={bottomRef} />
-          </div>
-        </div>
-
-        <div className="composer-area">
-          <form className="composer" onSubmit={sendMessage}>
-            <textarea
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder='Demandez quelque chose ou écrivez : "Je veux créer cette entreprise…"'
-              rows={3}
-              disabled={isStreaming}
-            />
-
-            <div className="composer-toolbar">
-              <div className="composer-tools">
-                <button type="button" title="Ajouter un fichier">
-                  <Paperclip size={18} />
-                </button>
-                <button type="button" title="Utiliser la voix">
-                  <Mic size={18} />
-                </button>
-                <span>
-                  Fichiers · Web · Code · Images · Voix · Agents
-                </span>
               </div>
 
-              {isStreaming ? (
+              <div className="message-list">
+                {messages.map((message) => (
+                  <article
+                    key={message.id}
+                    className={`message-row message-${message.role}`}
+                  >
+                    <div className="message-identity">
+                      {message.role === "user" ? (
+                        <span className="user-avatar">GS</span>
+                      ) : (
+                        <span className="assistant-avatar">
+                          <Atom size={18} />
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="message-body">
+                      <div className="message-header">
+                        <strong>
+                          {message.role === "user"
+                            ? "Vous"
+                            : "Universal AI"}
+                        </strong>
+
+                        <span>
+                          {message.role === "assistant"
+                            ? activeProvider || "Intelligence Auto"
+                            : "À l’instant"}
+                        </span>
+                      </div>
+
+                      <div className="message-text">
+                        {message.content ||
+                          (isStreaming
+                            ? "Analyse et orchestration en cours…"
+                            : "")}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+
+                <div ref={bottomRef} />
+              </div>
+            </section>
+          )}
+        </div>
+
+        <footer className="composer-section">
+          <form className="composer" onSubmit={sendMessage}>
+            <div className="composer-main">
+              <textarea
+                value={input}
+                onChange={(event) =>
+                  setInput(event.target.value)
+                }
+                onKeyDown={handleKeyDown}
+                placeholder="Décrivez un objectif, posez une question ou demandez à Universal AI de construire quelque chose…"
+                rows={2}
+                disabled={isStreaming}
+              />
+
+              <div className="composer-quick-actions">
                 <button
                   type="button"
-                  className="stop-button"
-                  onClick={stopGeneration}
+                  aria-label="Ajouter un fichier"
+                  title="Ajouter un fichier"
                 >
-                  <span />
-                  Arrêter
+                  <Paperclip size={18} />
                 </button>
-              ) : (
+
                 <button
-                  type="submit"
-                  className="send-button"
-                  disabled={!input.trim()}
+                  type="button"
+                  aria-label="Utiliser la voix"
+                  title="Utiliser la voix"
                 >
-                  <Send size={18} />
-                  Envoyer
+                  <Mic size={18} />
                 </button>
-              )}
+
+                <button
+                  type="button"
+                  aria-label="Ajouter une image"
+                  title="Ajouter une image"
+                >
+                  <Image size={18} />
+                </button>
+
+                <button
+                  type="button"
+                  aria-label="Ajouter une vidéo"
+                  title="Ajouter une vidéo"
+                >
+                  <Video size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="composer-footer">
+              <div className="composer-modes">
+                <button type="button">
+                  <Globe2 size={15} />
+                  Recherche
+                </button>
+
+                <button type="button">
+                  <Code2 size={15} />
+                  Code
+                </button>
+
+                <button type="button">
+                  <Bot size={15} />
+                  Agents
+                </button>
+              </div>
+
+              <div className="composer-submit">
+                <span>
+                  <kbd>Entrée</kbd> envoyer
+                </span>
+
+                {isStreaming ? (
+                  <button
+                    className="stop-generation"
+                    type="button"
+                    onClick={stopGeneration}
+                  >
+                    <Square size={15} fill="currentColor" />
+                    Arrêter
+                  </button>
+                ) : (
+                  <button
+                    className="send-message"
+                    type="submit"
+                    disabled={!input.trim()}
+                  >
+                    <Send size={17} />
+                    Exécuter
+                  </button>
+                )}
+              </div>
             </div>
           </form>
 
-          <p className="composer-disclaimer">
-            Universal AI peut faire des erreurs. Vérifiez les
-            informations importantes et les modifications de code.
-          </p>
-        </div>
+          <div className="security-note">
+            <ShieldCheck size={12} />
+            Réponses générées par intelligence artificielle.
+            Vérifiez les décisions critiques.
+          </div>
+        </footer>
       </section>
     </main>
   );
