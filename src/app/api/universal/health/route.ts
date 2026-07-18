@@ -5,6 +5,7 @@ import {
 } from "../../../../lib/universal/core";
 
 import {
+  bootstrapUniversalProviders,
   universalProviderRegistry,
 } from "../../../../lib/universal/providers";
 
@@ -18,6 +19,8 @@ export const runtime = "nodejs";
 const processStartedAt = Date.now();
 
 export async function GET() {
+  bootstrapUniversalProviders();
+
   const providers =
     universalProviderRegistry.summaries();
 
@@ -32,17 +35,23 @@ export async function GET() {
     ).length;
 
   const health: UniversalHealthStatus = {
-    status: "healthy",
+    status:
+      configuredProviders > 0
+        ? "healthy"
+        : "degraded",
     service: universalConfig.appName,
     version: universalConfig.appVersion,
-    environment: universalConfig.environment,
+    environment:
+      universalConfig.environment,
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(
-      (Date.now() - processStartedAt) / 1000,
+      (Date.now() - processStartedAt) /
+        1000,
     ),
     providers: {
       total: providers.length,
-      configured: configuredProviders,
+      configured:
+        configuredProviders,
       enabled: enabledProviders,
     },
   };
@@ -50,12 +59,16 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     health,
+    providers,
     architecture: {
       core: true,
       eventBus: true,
       logger: true,
       serviceRegistry: true,
       providerRegistry: true,
+      multiProviderEngine: true,
+      intelligentRouter: true,
+      fallback: true,
     },
   });
 }
