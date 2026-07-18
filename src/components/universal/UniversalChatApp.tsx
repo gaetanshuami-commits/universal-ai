@@ -13,6 +13,11 @@ import {
   streamUniversalChat,
 } from "../../lib/universal/chat/client";
 
+import {
+  AttachmentComposer,
+  useAttachments,
+} from "./attachments";
+
 type MessageRole = "user" | "assistant";
 
 interface ChatMessage {
@@ -266,6 +271,9 @@ export default function UniversalChatApp() {
 
   const [modelsError, setModelsError] =
     useState("");
+  const attachmentManager =
+    useAttachments();
+
 
   const [isGenerating, setIsGenerating] =
     useState(false);
@@ -541,9 +549,32 @@ export default function UniversalChatApp() {
   async function sendMessage(
     requestedPrompt?: string,
   ): Promise<void> {
-    const prompt = (
+    const textPrompt = (
       requestedPrompt ?? input
     ).trim();
+
+    const attachmentPrompt =
+      attachmentManager.attachments.length > 0
+        ? attachmentManager.attachments
+            .map(
+              (attachment) =>
+                [
+                  "[Fichier joint]",
+                  `Nom : ${attachment.name}`,
+                  `Type : ${attachment.mimeType}`,
+                  `Catégorie : ${attachment.category}`,
+                  `Taille : ${attachment.size} octets`,
+                ].join("\n"),
+            )
+            .join("\n\n")
+        : "";
+
+    const prompt = [
+      textPrompt,
+      attachmentPrompt,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
 
     if (
       !prompt ||
@@ -594,6 +625,7 @@ export default function UniversalChatApp() {
     );
 
     setInput("");
+    attachmentManager.clearAttachments();
     setIsGenerating(true);
     setProviderMenuOpen(false);
 
@@ -1226,7 +1258,14 @@ export default function UniversalChatApp() {
             onSubmit={handleSubmit}
           >
             <div className="rounded-[24px] border border-black/[0.09] bg-white p-2 shadow-[0_12px_40px_rgba(20,24,35,0.09)] transition focus-within:border-black/20">
-              <textarea
+              
+                <div className="px-2 pt-2">
+                  <AttachmentComposer
+                    disabled={isGenerating}
+                    manager={attachmentManager}
+                  />
+                </div>
+<textarea
                 className="block max-h-[180px] min-h-[52px] w-full resize-none bg-transparent px-3 py-3 text-[15px] leading-6 outline-none placeholder:text-black/30"
                 disabled={isGenerating}
                 onChange={(event) =>
@@ -1290,5 +1329,6 @@ export default function UniversalChatApp() {
     </main>
   );
 }
+
 
 
