@@ -41,6 +41,14 @@ interface ProviderOption {
   description: string;
 }
 
+interface ModelOption {
+  id: string;
+  name: string;
+  providerId: string;
+  description?: string;
+  enabled?: boolean;
+}
+
 const STORAGE_KEY =
   "universal-ai-conversations-v1";
 
@@ -104,6 +112,106 @@ const SUGGESTIONS = [
   },
 ];
 
+function normalizeModelOptions(
+  payload: unknown,
+): ModelOption[] {
+  let rawModels: unknown[] = [];
+
+  if (Array.isArray(payload)) {
+    rawModels = payload;
+  } else if (
+    payload &&
+    typeof payload === "object"
+  ) {
+    const record =
+      payload as Record<string, unknown>;
+
+    if (Array.isArray(record.models)) {
+      rawModels = record.models;
+    } else if (
+      Array.isArray(record.data)
+    ) {
+      rawModels = record.data;
+    } else if (
+      record.data &&
+      typeof record.data === "object"
+    ) {
+      const data =
+        record.data as Record<
+          string,
+          unknown
+        >;
+
+      if (Array.isArray(data.models)) {
+        rawModels = data.models;
+      }
+    }
+  }
+
+  return rawModels
+    .map((entry): ModelOption | null => {
+      if (
+        !entry ||
+        typeof entry !== "object"
+      ) {
+        return null;
+      }
+
+      const model =
+        entry as Record<string, unknown>;
+
+      const id =
+        typeof model.id === "string"
+          ? model.id
+          : typeof model.model === "string"
+            ? model.model
+            : typeof model.modelId ===
+                "string"
+              ? model.modelId
+              : "";
+
+      const providerId =
+        typeof model.providerId ===
+        "string"
+          ? model.providerId
+          : typeof model.provider ===
+              "string"
+            ? model.provider
+            : "";
+
+      if (!id || !providerId) {
+        return null;
+      }
+
+      const name =
+        typeof model.name === "string"
+          ? model.name
+          : typeof model.label === "string"
+            ? model.label
+            : id;
+
+      return {
+        id,
+        name,
+        providerId,
+        description:
+          typeof model.description ===
+          "string"
+            ? model.description
+            : undefined,
+        enabled:
+          typeof model.enabled ===
+          "boolean"
+            ? model.enabled
+            : true,
+      };
+    })
+    .filter(
+      (model): model is ModelOption =>
+        Boolean(model?.enabled),
+    );
+}
+
 function createId(): string {
   return crypto.randomUUID();
 }
@@ -147,6 +255,18 @@ export default function UniversalChatApp() {
   const [providerSelection, setProviderSelection] =
     useState("auto");
 
+  const [availableModels, setAvailableModels] =
+    useState<ModelOption[]>([]);
+
+  const [selectedModelId, setSelectedModelId] =
+    useState("");
+
+  const [modelsLoading, setModelsLoading] =
+    useState(true);
+
+  const [modelsError, setModelsError] =
+    useState("");
+
   const [isGenerating, setIsGenerating] =
     useState(false);
 
@@ -167,6 +287,71 @@ export default function UniversalChatApp() {
 
   const messagesEndRef =
     useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadModels(): Promise<void> {
+      setModelsLoading(true);
+      setModelsError("");
+
+      try {
+        const response = await fetch(
+          "/api/universal/models",
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Impossible de charger les modèles (${response.status}).`,
+          );
+        }
+
+        const payload: unknown =
+          await response.json();
+
+        const models =
+          normalizeModelOptions(payload);
+
+        if (!active) {
+          return;
+        }
+
+        setAvailableModels(models);
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+
+        setAvailableModels([]);
+        setModelsError(
+          error instanceof Error
+            ? error.message
+            : "Impossible de charger les modèles.",
+        );
+      } finally {
+        if (active) {
+          setModelsLoading(false);
+        }
+      }
+    }
+
+    void loadModels();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setSelectedModelId("");
+  }, [providerSelection]);
 
   useEffect(() => {
     try {
@@ -236,6 +421,27 @@ export default function UniversalChatApp() {
       (provider) =>
         provider.id === providerSelection,
     ) ?? PROVIDERS[0];
+
+  const filteredModels = useMemo(() => {
+    if (!selectedProvider.providerId) {
+      return availableModels;
+    }
+
+    return availableModels.filter(
+      (model) =>
+        model.providerId ===
+        selectedProvider.providerId,
+    );
+  }, [
+    availableModels,
+    selectedProvider.providerId,
+  ]);
+
+  const selectedModel =
+    filteredModels.find(
+      (model) =>
+        model.id === selectedModelId,
+    );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -420,8 +626,19 @@ export default function UniversalChatApp() {
           mode: "auto",
           providerId:
             selectedProvider.providerId,
+          model:
+            selectedModelId ||
+            undefined,
+          modelId:
+            selectedModelId ||
+            undefined,
           allowFallback: true,
           stream: true,
+        } as Parameters<
+          typeof streamUniversalChat
+        >[0] & {
+          model?: string;
+          modelId?: string;
         },
         {
           onDelta(delta) {
@@ -752,8 +969,50 @@ export default function UniversalChatApp() {
             </div>
           </div>
 
-          <div className="relative">
-            <button
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:block">
+              <select
+                aria-label="Choisir un modèle"
+                className="h-10 max-w-[220px] rounded-xl border border-black/[0.08] bg-white px-3 text-sm font-medium text-[#17191f] shadow-sm outline-none transition hover:border-black/15 focus:border-black/25 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={
+                  modelsLoading ||
+                  filteredModels.length === 0
+                }
+                onChange={(event) =>
+                  setSelectedModelId(
+                    event.target.value,
+                  )
+                }
+                title={
+                  modelsError ||
+                  selectedModel?.description ||
+                  "Sélection automatique du modèle"
+                }
+                value={selectedModelId}
+              >
+                <option value="">
+                  {modelsLoading
+                    ? "Chargement…"
+                    : filteredModels.length > 0
+                      ? "Modèle automatique"
+                      : "Aucun modèle"}
+                </option>
+
+                {filteredModels.map(
+                  (model) => (
+                    <option
+                      key={`${model.providerId}:${model.id}`}
+                      value={model.id}
+                    >
+                      {model.name}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+
+            <div className="relative">
+              <button
               className="flex h-10 items-center gap-2 rounded-xl border border-black/[0.08] bg-white px-3 text-sm font-medium shadow-sm transition hover:border-black/15"
               onClick={() =>
                 setProviderMenuOpen(
@@ -821,7 +1080,8 @@ export default function UniversalChatApp() {
                   ),
                 )}
               </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         </header>
 
@@ -983,6 +1243,9 @@ export default function UniversalChatApp() {
                 <div className="flex items-center gap-2 px-2 text-xs text-black/35">
                   <span className="hidden sm:inline">
                     {selectedProvider.label}
+                    {selectedModel
+                      ? ` · ${selectedModel.name}`
+                      : " · modèle automatique"}
                   </span>
 
                   <span className="hidden sm:inline">
@@ -1027,4 +1290,5 @@ export default function UniversalChatApp() {
     </main>
   );
 }
+
 
