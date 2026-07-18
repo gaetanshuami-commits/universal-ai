@@ -611,13 +611,30 @@ export default function UniversalChatApp() {
       .filter(Boolean)
       .join("\n\n");
 
+    const attachmentDisplay =
+      pendingAttachments.length > 0
+        ? pendingAttachments
+            .map(
+              (attachment) =>
+                `Fichier joint : ${attachment.name}`,
+            )
+            .join("\n")
+        : "";
+
+    const displayPrompt = [
+      textPrompt,
+      attachmentDisplay,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
     const conversationId =
       activeConversation.id;
 
     const userMessage: ChatMessage = {
       id: createId(),
       role: "user",
-      content: prompt,
+      content: displayPrompt,
       createdAt:
         new Date().toISOString(),
     };
@@ -639,7 +656,11 @@ export default function UniversalChatApp() {
         ...conversation,
         title:
           conversation.messages.length === 0
-            ? buildConversationTitle(prompt)
+            ? buildConversationTitle(
+                textPrompt ||
+                  pendingAttachments[0]?.name ||
+                  "Nouvelle conversation",
+              )
             : conversation.title,
         updatedAt:
           new Date().toISOString(),
@@ -1356,6 +1377,7 @@ export default function UniversalChatApp() {
     </main>
   );
 }
+
 
 
 
