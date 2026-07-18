@@ -40,6 +40,67 @@ interface ExtractionApiError {
   error?: string;
 }
 
+const extractionCache =
+  new Map<
+    string,
+    ExtractedAttachment
+  >();
+
+function createAttachmentCacheKey(
+  attachment: ChatAttachment,
+): string {
+  return [
+    attachment.name,
+    attachment.size,
+    attachment.mimeType,
+    attachment.file.lastModified,
+  ].join(":");
+}
+
+function createSingleFileResponse(
+  file: ExtractedAttachment,
+): AttachmentExtractionResponse {
+  return {
+    files: [file],
+    errors: [],
+    summary: {
+      requested: 1,
+      extracted: 1,
+      failed: 0,
+    },
+  };
+}
+
+function mergeExtractionResponses(
+  responses: AttachmentExtractionResponse[],
+): AttachmentExtractionResponse {
+  const files =
+    responses.flatMap(
+      (response) => response.files,
+    );
+
+  const errors =
+    responses.flatMap(
+      (response) => response.errors,
+    );
+
+  return {
+    files,
+    errors,
+    summary: {
+      requested:
+        responses.reduce(
+          (total, response) =>
+            total +
+            response.summary.requested,
+          0,
+        ),
+      extracted: files.length,
+      failed: errors.length,
+    },
+  };
+}
+
 export class AttachmentExtractionException
   extends Error {
   readonly status: number;
@@ -73,12 +134,54 @@ export async function extractAttachments(
     };
   }
 
+  const cachedResponses:
+    AttachmentExtractionResponse[] = [];
+
+  const uncachedAttachments:
+    ChatAttachment[] = [];
+
+  for (
+    const attachment of attachments
+  ) {
+    const cacheKey =
+      createAttachmentCacheKey(
+        attachment,
+      );
+
+    const cachedFile =
+      extractionCache.get(
+        cacheKey,
+      );
+
+    if (cachedFile) {
+      cachedResponses.push(
+        createSingleFileResponse(
+          cachedFile,
+        ),
+      );
+
+      continue;
+    }
+
+    uncachedAttachments.push(
+      attachment,
+    );
+  }
+
+  if (
+    uncachedAttachments.length === 0
+  ) {
+    return mergeExtractionResponses(
+      cachedResponses,
+    );
+  }
+
   const formData =
     new FormData();
 
   for (
     const attachment of
-    attachments
+    uncachedAttachments
   ) {
     formData.append(
       "files",
@@ -114,8 +217,43 @@ export async function extractAttachments(
     );
   }
 
-  return payload as
-    AttachmentExtractionResponse;
+  const extractedResponse =
+    payload as
+      AttachmentExtractionResponse;
+
+  for (
+    const extractedFile of
+    extractedResponse.files
+  ) {
+    const matchingAttachment =
+      uncachedAttachments.find(
+        (attachment) =>
+          attachment.name ===
+            extractedFile.name &&
+          attachment.size ===
+            extractedFile.size,
+      );
+
+    if (!matchingAttachment) {
+      continue;
+    }
+
+    extractionCache.set(
+      createAttachmentCacheKey(
+        matchingAttachment,
+      ),
+      extractedFile,
+    );
+  }
+
+  return mergeExtractionResponses([
+    ...cachedResponses,
+    extractedResponse,
+  ]);
+}
+
+export function clearAttachmentExtractionCache(): void {
+  extractionCache.clear();
 }
 
 export function buildAttachmentContext(
@@ -175,3 +313,4 @@ export function buildAttachmentContext(
 
   return sections.join("\n\n");
 }
+
