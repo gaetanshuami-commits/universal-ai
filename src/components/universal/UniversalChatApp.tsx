@@ -15,6 +15,8 @@ import {
 
 import {
   AttachmentComposer,
+  buildAttachmentContext,
+  extractAttachments,
   useAttachments,
 } from "./attachments";
 
@@ -553,21 +555,54 @@ export default function UniversalChatApp() {
       requestedPrompt ?? input
     ).trim();
 
-    const attachmentPrompt =
-      attachmentManager.attachments.length > 0
-        ? attachmentManager.attachments
-            .map(
-              (attachment) =>
-                [
-                  "[Fichier joint]",
-                  `Nom : ${attachment.name}`,
-                  `Type : ${attachment.mimeType}`,
-                  `Catégorie : ${attachment.category}`,
-                  `Taille : ${attachment.size} octets`,
-                ].join("\n"),
-            )
-            .join("\n\n")
-        : "";
+    const pendingAttachments = [
+      ...attachmentManager.attachments,
+    ];
+
+    if (
+      (!textPrompt &&
+        pendingAttachments.length === 0) ||
+      !activeConversation ||
+      isGenerating
+    ) {
+      return;
+    }
+
+    let attachmentPrompt = "";
+
+    if (
+      pendingAttachments.length > 0
+    ) {
+      setIsGenerating(true);
+      setProviderMenuOpen(false);
+
+      try {
+        const extractionResult =
+          await extractAttachments(
+            pendingAttachments,
+          );
+
+        attachmentPrompt =
+          buildAttachmentContext(
+            extractionResult,
+          );
+      } catch (error) {
+        console.error(
+          "Attachment extraction failed:",
+          error,
+        );
+
+        setIsGenerating(false);
+
+        window.alert(
+          error instanceof Error
+            ? error.message
+            : "Impossible d'analyser les fichiers.",
+        );
+
+        return;
+      }
+    }
 
     const prompt = [
       textPrompt,
@@ -575,14 +610,6 @@ export default function UniversalChatApp() {
     ]
       .filter(Boolean)
       .join("\n\n");
-
-    if (
-      !prompt ||
-      !activeConversation ||
-      isGenerating
-    ) {
-      return;
-    }
 
     const conversationId =
       activeConversation.id;
@@ -1329,6 +1356,7 @@ export default function UniversalChatApp() {
     </main>
   );
 }
+
 
 
 
