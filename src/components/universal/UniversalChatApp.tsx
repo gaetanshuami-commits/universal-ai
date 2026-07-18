@@ -276,6 +276,11 @@ export default function UniversalChatApp() {
   const attachmentManager =
     useAttachments();
 
+  const [
+    isExtractingAttachments,
+    setIsExtractingAttachments,
+  ] = useState(false);
+
 
   const [isGenerating, setIsGenerating] =
     useState(false);
@@ -576,6 +581,8 @@ export default function UniversalChatApp() {
       setIsGenerating(true);
       setProviderMenuOpen(false);
 
+      setIsExtractingAttachments(true);
+
       try {
         const extractionResult =
           await extractAttachments(
@@ -586,12 +593,15 @@ export default function UniversalChatApp() {
           buildAttachmentContext(
             extractionResult,
           );
+
+        setIsExtractingAttachments(false);
       } catch (error) {
         console.error(
           "Attachment extraction failed:",
           error,
         );
 
+        setIsExtractingAttachments(false);
         setIsGenerating(false);
 
         window.alert(
@@ -1308,6 +1318,22 @@ export default function UniversalChatApp() {
             <div className="rounded-[24px] border border-black/[0.09] bg-white p-2 shadow-[0_12px_40px_rgba(20,24,35,0.09)] transition focus-within:border-black/20">
               
                 <div className="px-2 pt-2">
+                {isExtractingAttachments ? (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="mb-2 flex items-center gap-2 rounded-xl border border-black/[0.08] bg-black/[0.03] px-3 py-2 text-sm text-black/65"
+                  >
+                    <span
+                      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/70"
+                      aria-hidden="true"
+                    />
+                    <span>
+                      Analyse des documents en cours…
+                    </span>
+                  </div>
+                ) : null}
+
                   <AttachmentComposer
                     disabled={isGenerating}
                     manager={attachmentManager}
@@ -1377,6 +1403,7 @@ export default function UniversalChatApp() {
     </main>
   );
 }
+
 
 
 
