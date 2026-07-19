@@ -7,17 +7,21 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
+  } from "react";
 
 import {
   streamUniversalChat,
-} from "../../lib/universal/chat/client";
+  } from "../../lib/universal/chat/client";
 
 import {
   AttachmentComposer,
   buildAttachmentContext,
   extractAttachments,
   useAttachments,
+  buildRagContext,
+  chunkExtractedDocuments,
+  indexDocumentChunks,
+  searchDocumentChunks,
 } from "./attachments";
 
 type MessageRole = "user" | "assistant";
@@ -589,10 +593,44 @@ export default function UniversalChatApp() {
             pendingAttachments,
           );
 
-        attachmentPrompt =
-          buildAttachmentContext(
-            extractionResult,
+        const chunkingResult =
+          chunkExtractedDocuments(
+            extractionResult.files,
           );
+
+        await indexDocumentChunks(
+          chunkingResult.chunks,
+        );
+
+        const ragQuery =
+          textPrompt.trim() ||
+          pendingAttachments
+            .map(
+              (attachment) =>
+                attachment.name,
+            )
+            .join(" ");
+
+        const ragSearchResult =
+          await searchDocumentChunks(
+            ragQuery,
+            {
+              topK: 6,
+              minimumScore: 0.15,
+            },
+          );
+
+        attachmentPrompt =
+          buildRagContext(
+            ragSearchResult.results,
+          );
+
+        if (!attachmentPrompt) {
+          attachmentPrompt =
+            buildAttachmentContext(
+              extractionResult,
+            );
+        }
 
         setIsExtractingAttachments(false);
       } catch (error) {
@@ -1403,6 +1441,7 @@ export default function UniversalChatApp() {
     </main>
   );
 }
+
 
 
 

@@ -4,4 +4,5 @@ export * from "./useAttachments";
 export * from "./AttachmentComposer";
 export * from "./extractAttachments";
 export * from "./documentChunking";
+export * from "./ragClient";
 
