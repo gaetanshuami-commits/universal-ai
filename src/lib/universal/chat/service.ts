@@ -1,10 +1,14 @@
-﻿import {
+import {
   createExecutionContext,
 } from "../core";
 
 import {
   universalAIRouter,
 } from "../router";
+
+import {
+  executeUniversalToolPipeline,
+} from "../tools";
 
 import type {
   UniversalChatInput,
@@ -16,9 +20,15 @@ export async function executeUniversalChat(
 ): Promise<UniversalChatResult> {
   const context = createExecutionContext();
 
+  const toolPipeline =
+    await executeUniversalToolPipeline(
+      input.messages,
+      context.requestId,
+    );
+
   const response =
     await universalAIRouter.route({
-      messages: input.messages,
+      messages: toolPipeline.messages,
       mode: input.mode ?? "auto",
       preferredProviderId:
         input.providerId,
