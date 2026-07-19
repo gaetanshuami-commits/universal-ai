@@ -1,7 +1,10 @@
 ﻿import {
-createEmbeddingBatches,
-globalVectorStore,
+  createEmbeddingBatches,
 } from "@/lib/universal/rag";
+
+import {
+  globalVectorStore,
+} from "@/lib/universal/rag/vectorStore";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -66,15 +69,17 @@ count:
 results.length,
 results:
 results.map(
-r=>({
-score:r.score,
-id:r.item.id,
+(result) => ({
+score:
+result.score,
+id:
+result.item.id,
 document:
-r.item.chunk.documentName,
+result.item.chunk.documentName,
 chunk:
-r.item.chunk.chunkIndex,
+result.item.chunk.chunkIndex,
 text:
-r.item.chunk.text,
+result.item.chunk.text,
 }),
 ),
 },
@@ -109,3 +114,4 @@ globalVectorStore.size(),
 );
 
 }
+
