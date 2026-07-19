@@ -43,6 +43,9 @@ interface Conversation {
   createdAt: string;
   updatedAt: string;
   messages: ChatMessage[];
+  memorySummary?: string;
+  memoryMessageCount?: number;
+  memoryUpdatedAt?: string;
 }
 
 interface ProviderOption {
@@ -62,6 +65,10 @@ interface ModelOption {
 
 const STORAGE_KEY =
   "universal-ai-conversations-v1";
+
+const MEMORY_RECENT_MESSAGE_LIMIT = 12;
+const MEMORY_SUMMARY_CHARACTER_LIMIT = 6000;
+const MEMORY_MESSAGE_CHARACTER_LIMIT = 700;
 
 const PROVIDERS: ProviderOption[] = [
   {
@@ -255,6 +262,120 @@ function buildConversationTitle(
     : normalized;
 }
 
+interface ConversationMemoryResult {
+  summary: string;
+  context: string;
+  recentMessages: Array<{
+    role: MessageRole;
+    content: string;
+  }>;
+  summarizedMessageCount: number;
+}
+
+function normalizeMemoryText(
+  content: string,
+  maximumLength: number,
+): string {
+  const normalized =
+    content.replace(/\s+/g, " ").trim();
+
+  if (normalized.length <= maximumLength) {
+    return normalized;
+  }
+
+  return `${normalized
+    .slice(0, maximumLength)
+    .trim()}…`;
+}
+
+function buildConversationMemory(
+  messages: ChatMessage[],
+  existingSummary = "",
+): ConversationMemoryResult {
+  const validMessages =
+    messages.filter(
+      (message) =>
+        !message.error &&
+        message.content.trim().length > 0,
+    );
+
+  const recentMessages =
+    validMessages
+      .slice(-MEMORY_RECENT_MESSAGE_LIMIT)
+      .map((message) => ({
+        role: message.role,
+        content: message.content,
+      }));
+
+  const olderMessages =
+    validMessages.slice(
+      0,
+      Math.max(
+        0,
+        validMessages.length -
+          MEMORY_RECENT_MESSAGE_LIMIT,
+      ),
+    );
+
+  if (olderMessages.length === 0) {
+    const summary =
+      existingSummary.trim();
+
+    return {
+      summary,
+      context: summary
+        ? [
+            "Mémoire résumée de la conversation :",
+            summary,
+          ].join("\n\n")
+        : "",
+      recentMessages,
+      summarizedMessageCount: 0,
+    };
+  }
+
+  const summarizedMessages =
+    olderMessages.map((message) => {
+      const speaker =
+        message.role === "user"
+          ? "Utilisateur"
+          : "Assistant";
+
+      return `${speaker} : ${normalizeMemoryText(
+        message.content,
+        MEMORY_MESSAGE_CHARACTER_LIMIT,
+      )}`;
+    });
+
+  const combinedSummary = [
+    existingSummary.trim(),
+    ...summarizedMessages,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const summary =
+    combinedSummary.length >
+    MEMORY_SUMMARY_CHARACTER_LIMIT
+      ? combinedSummary.slice(
+          -MEMORY_SUMMARY_CHARACTER_LIMIT,
+        )
+      : combinedSummary;
+
+  return {
+    summary,
+    context: [
+      "Mémoire résumée des échanges précédents :",
+      summary,
+      "",
+      "Utilise cette mémoire uniquement pour conserver la continuité de la conversation.",
+      "Les messages récents restent prioritaires.",
+    ].join("\n"),
+    recentMessages,
+    summarizedMessageCount:
+      olderMessages.length,
+  };
+}
 export default function UniversalChatApp() {
   const [conversations, setConversations] =
     useState<Conversation[]>([]);
@@ -652,7 +773,14 @@ export default function UniversalChatApp() {
       }
     }
 
+    const conversationMemory =
+      buildConversationMemory(
+        activeConversation.messages,
+        activeConversation.memorySummary,
+      );
+
     const prompt = [
+      conversationMemory.context,
       textPrompt,
       attachmentPrompt,
     ]
@@ -712,6 +840,15 @@ export default function UniversalChatApp() {
             : conversation.title,
         updatedAt:
           new Date().toISOString(),
+        memorySummary:
+          conversationMemory.summary ||
+          conversation.memorySummary,
+        memoryMessageCount:
+          conversationMemory.summarizedMessageCount,
+        memoryUpdatedAt:
+          conversationMemory.summary
+            ? new Date().toISOString()
+            : conversation.memoryUpdatedAt,
         messages: [
           ...conversation.messages,
           userMessage,
@@ -732,14 +869,7 @@ export default function UniversalChatApp() {
       controller;
 
     const priorMessages =
-      activeConversation.messages
-        .filter(
-          (message) => !message.error,
-        )
-        .map((message) => ({
-          role: message.role,
-          content: message.content,
-        }));
+      conversationMemory.recentMessages;
 
     try {
       await streamUniversalChat(
@@ -1441,6 +1571,7 @@ export default function UniversalChatApp() {
     </main>
   );
 }
+
 
 
 
