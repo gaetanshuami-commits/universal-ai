@@ -8,3 +8,5 @@ export * from "./adapters/anthropic";
 export * from "./adapters/deepseek";
 export * from "./adapters/gemini";
 export * from "./adapters/openai";
+export * from "./adapters/openrouter-manager";
+

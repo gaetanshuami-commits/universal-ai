@@ -32,42 +32,49 @@ const PROVIDER_MODE_PRIORITY:
     ReadonlyArray<string>
   >> = {
     auto: [
+      "openrouter",
       "openai",
       "anthropic",
       "google",
       "deepseek",
     ],
     fast: [
+      "openrouter",
       "google",
       "openai",
       "deepseek",
       "anthropic",
     ],
     reasoning: [
+      "openrouter",
       "openai",
       "anthropic",
       "deepseek",
       "google",
     ],
     code: [
+      "openrouter",
       "anthropic",
       "openai",
       "deepseek",
       "google",
     ],
     creative: [
+      "openrouter",
       "anthropic",
       "openai",
       "google",
       "deepseek",
     ],
     analysis: [
+      "openrouter",
       "openai",
       "anthropic",
       "deepseek",
       "google",
     ],
     multimodal: [
+      "openrouter",
       "google",
       "openai",
       "anthropic",
@@ -376,3 +383,4 @@ function containsAny(
 
 export const universalAIRouter =
   new UniversalAIRouter();
+
