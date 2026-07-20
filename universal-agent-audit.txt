@@ -1,0 +1,1595 @@
+﻿
+==================================================
+DATE
+==================================================
+2026-07-19 22:25:07
+
+==================================================
+GIT STATUS
+==================================================
+On branch master
+nothing to commit, working tree clean
+
+==================================================
+DERNIERS COMMITS
+==================================================
+b2952a1 use OpenRouter as the sole universal provider
+5534e78 bridge universal router to OpenRouter provider manager
+6d13edf add provider manager and OpenRouter integration
+0598f27 add multi-provider web search tools
+763f85f add universal agent tools and calculator
+88360ce add conversation memory window
+91277a5 connect document rag to universal chat
+de11bd6 fix vector search imports and types
+5db9cb8 add vector search api
+99d025e add vector store core
+6d05c0f add modular embedding engine
+e9f6d41 add intelligent document chunking
+
+==================================================
+ARBORESCENCE UNIVERSAL
+==================================================
+C:\Users\gaeta\universal-ai\src\lib\universal\chat\client.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\chat\handler.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\chat\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\chat\normalize.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\chat\service.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\chat\stream.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\chat\types.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\config.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\errors.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\event-bus.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\execution.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\logger.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\registry.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\core\types.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\catalog.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\cost.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\manager.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\openrouter.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\types.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\bootstrap.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\http.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\registry.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\types.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\utils.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\adapters\anthropic.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\adapters\deepseek.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\adapters\gemini.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\adapters\openai.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\providers\adapters\openrouter-manager.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\rag\embeddings.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\rag\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\rag\vectorStore.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\router\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\router\router.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\router\types.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\calculator.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\detector.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\executor.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\registry.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\types.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\brave.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\detector.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\exa.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\formatter.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\index.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\router.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\tavily.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\tool.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\types.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\utils.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\chat\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\embeddings\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\files\extract\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\generate\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\health\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\models\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\provider-manager\chat\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\provider-manager\health\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\provider-manager\models\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\vector-index\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\vector-search\route.ts
+
+==================================================
+FICHIERS AGENT ET TOOLS
+==================================================
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\executor.ts
+C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\tool.ts
+
+==================================================
+ROUTES API
+==================================================
+C:\Users\gaeta\universal-ai\src\app\api\ai\chat\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\ai\models\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\ai\route\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\health\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\chat\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\embeddings\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\files\extract\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\generate\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\health\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\models\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\provider-manager\chat\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\provider-manager\health\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\provider-manager\models\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\vector-index\route.ts
+C:\Users\gaeta\universal-ai\src\app\api\universal\vector-search\route.ts
+
+==================================================
+PACKAGE.JSON
+==================================================
+{
+  "name": "universal-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.7",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.24.0",
+    "mammoth": "^1.9.1",
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.6.0",
+    "unpdf": "^1.6.2",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+
+==================================================
+CHAT SERVICE
+==================================================
+import {
+  createExecutionContext,
+} from "../core";
+
+import {
+  universalAIRouter,
+} from "../router";
+
+import {
+  executeUniversalToolPipeline,
+} from "../tools";
+
+import type {
+  UniversalChatInput,
+  UniversalChatResult,
+} from "./types";
+
+export async function executeUniversalChat(
+  input: UniversalChatInput,
+): Promise<UniversalChatResult> {
+  const context = createExecutionContext();
+
+  const toolPipeline =
+    await executeUniversalToolPipeline(
+      input.messages,
+      context.requestId,
+    );
+
+  const response =
+    await universalAIRouter.route({
+      messages: toolPipeline.messages,
+      mode: input.mode ?? "auto",
+      preferredProviderId:
+        input.providerId,
+      model: input.model,
+      temperature:
+        input.temperature,
+      maxOutputTokens:
+        input.maxOutputTokens,
+      allowFallback:
+        input.allowFallback,
+      requiredCapabilities:
+        input.requiredCapabilities,
+      context,
+    });
+
+  return {
+    id: response.id,
+    content: response.content,
+    metadata: {
+      requestId: context.requestId,
+      providerId:
+        response.providerId,
+      model: response.model,
+      mode: response.routing.mode,
+      fallbackUsed:
+        response.routing.fallbackUsed,
+      finishReason:
+        response.finishReason,
+      usage: response.usage,
+      attempts:
+        response.routing.attempts,
+    },
+  };
+}
+
+==================================================
+TOOL PIPELINE
+==================================================
+===== C:\Users\gaeta\universal-ai\src\lib\universal\tools\executor.ts =====
+import type {
+  UniversalMessage,
+} from "../providers";
+
+import {
+  detectUniversalTools,
+} from "./detector";
+
+import {
+  bootstrapUniversalTools,
+  universalToolRegistry,
+} from "./registry";
+
+import type {
+  UniversalToolPipelineResult,
+  UniversalToolResult,
+} from "./types";
+
+const TOOL_TIMEOUT_MS = 8_000;
+const MAX_TOOLS_PER_REQUEST = 3;
+
+async function withTimeout<TValue>(
+  promise: Promise<TValue>,
+  timeoutMs: number,
+  toolId: string,
+): Promise<TValue> {
+  let timeoutHandle:
+    ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise =
+    new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        reject(
+          new Error(
+            `L'outil "${toolId}" a dÃ©passÃ© le dÃ©lai autorisÃ©.`,
+          ),
+        );
+      }, timeoutMs);
+    });
+
+  try {
+    return await Promise.race([
+      promise,
+      timeoutPromise,
+    ]);
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
+}
+
+function buildToolContextMessage(
+  executions:
+    ReadonlyArray<UniversalToolResult>,
+): UniversalMessage | null {
+  const successful =
+    executions.filter(
+      (execution) =>
+        execution.success,
+    );
+
+  if (successful.length === 0) {
+    return null;
+  }
+
+  const content = [
+    "RÃ©sultats fiables obtenus avec les outils internes :",
+    "",
+    ...successful.map(
+      (execution) =>
+        `- ${execution.toolId}: ${execution.content}`,
+    ),
+    "",
+    "Utilise ces rÃ©sultats pour rÃ©pondre Ã  l'utilisateur.",
+    "Ne modifie pas les valeurs calculÃ©es.",
+  ].join("\n");
+
+  return {
+    role: "system",
+    content,
+    name: "universal-tools",
+  };
+}
+
+export async function executeUniversalToolPipeline(
+  messages:
+    ReadonlyArray<UniversalMessage>,
+  requestId: string,
+): Promise<UniversalToolPipelineResult> {
+  bootstrapUniversalTools();
+
+  const detections =
+    detectUniversalTools({
+      messages,
+    }).slice(
+      0,
+      MAX_TOOLS_PER_REQUEST,
+    );
+
+  if (detections.length === 0) {
+    return {
+      messages,
+      executions: [],
+    };
+  }
+
+  const executions:
+    UniversalToolResult[] = [];
+
+  for (const detection of detections) {
+    const startedAt = Date.now();
+
+    try {
+      const tool =
+        universalToolRegistry.require(
+          detection.toolId,
+        );
+
+      const output = await withTimeout(
+        tool.execute(
+          detection.input,
+          {
+            requestId,
+            messages,
+          },
+        ),
+        TOOL_TIMEOUT_MS,
+        detection.toolId,
+      );
+
+      executions.push({
+        toolId: detection.toolId,
+        success: true,
+        content: output.content,
+        data: output.data,
+        durationMs:
+          Date.now() - startedAt,
+      });
+    } catch (error) {
+      executions.push({
+        toolId: detection.toolId,
+        success: false,
+        content: "",
+        durationMs:
+          Date.now() - startedAt,
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      });
+    }
+  }
+
+  const toolContextMessage =
+    buildToolContextMessage(executions);
+
+  return {
+    messages: toolContextMessage
+      ? [
+          toolContextMessage,
+          ...messages,
+        ]
+      : messages,
+    executions,
+  };
+}
+
+===== C:\Users\gaeta\universal-ai\src\lib\universal\tools\web\tool.ts =====
+import type {
+  UniversalTool,
+  UniversalToolDetection,
+} from "../types";
+import { detectWebSearchIntent } from "./detector";
+import { formatWebSearchForModel } from "./formatter";
+import { executeWebSearch } from "./router";
+import type { WebSearchIntent } from "./types";
+
+interface WebSearchToolInput {
+  readonly query: string;
+  readonly intent: WebSearchIntent;
+}
+
+function isWebSearchToolInput(value: unknown): value is WebSearchToolInput {
+  if (typeof value !== "object" || value === null) return false;
+
+  const candidate = value as {
+    readonly query?: unknown;
+    readonly intent?: unknown;
+  };
+
+  return (
+    typeof candidate.query === "string" &&
+    ["news", "general", "semantic", "deep"].includes(String(candidate.intent))
+  );
+}
+
+export const webSearchTool: UniversalTool = {
+  id: "web-search",
+  name: "Web Search",
+  description:
+    "Searches fresh or specialized information with Tavily, Brave Search and Exa.",
+
+  detect(context): UniversalToolDetection | null {
+    const detection = detectWebSearchIntent(context);
+    if (!detection) return null;
+
+    return {
+      toolId: "web-search",
+      confidence: detection.confidence,
+      input: {
+        query: detection.query,
+        intent: detection.intent,
+      } satisfies WebSearchToolInput,
+      reason: detection.reason,
+    };
+  },
+
+  async execute(input) {
+    if (!isWebSearchToolInput(input)) {
+      throw new Error("Invalid web search request.");
+    }
+
+    const execution = await executeWebSearch({
+      query: input.query,
+      intent: input.intent,
+      maxResults: input.intent === "deep" ? 8 : 6,
+    });
+
+    return {
+      content: formatWebSearchForModel(execution),
+      data: execution,
+    };
+  },
+};
+
+==================================================
+ROUTER
+==================================================
+import {
+  UniversalError,
+  createUniversalLogger,
+  universalConfig,
+} from "../core";
+
+import {
+  bootstrapUniversalProviders,
+  universalProviderRegistry,
+} from "../providers";
+
+import type {
+  UniversalAIProvider,
+  UniversalProviderCapability,
+} from "../providers";
+
+import type {
+  UniversalRouterRequest,
+  UniversalRouterResponse,
+  UniversalRoutingAttempt,
+  UniversalTaskMode,
+} from "./types";
+
+const logger =
+  createUniversalLogger(
+    "universal-ai-router",
+  );
+
+const PROVIDER_MODE_PRIORITY:
+  Readonly<Record<
+    UniversalTaskMode,
+    ReadonlyArray<string>
+  >> = {
+    auto: [
+      "openrouter",
+      "openai",
+      "anthropic",
+      "google",
+      "deepseek",
+    ],
+    fast: [
+      "openrouter",
+      "google",
+      "openai",
+      "deepseek",
+      "anthropic",
+    ],
+    reasoning: [
+      "openrouter",
+      "openai",
+      "anthropic",
+      "deepseek",
+      "google",
+    ],
+    code: [
+      "openrouter",
+      "anthropic",
+      "openai",
+      "deepseek",
+      "google",
+    ],
+    creative: [
+      "openrouter",
+      "anthropic",
+      "openai",
+      "google",
+      "deepseek",
+    ],
+    analysis: [
+      "openrouter",
+      "openai",
+      "anthropic",
+      "deepseek",
+      "google",
+    ],
+    multimodal: [
+      "openrouter",
+      "google",
+      "openai",
+      "anthropic",
+      "deepseek",
+    ],
+  };
+
+export class UniversalAIRouter {
+  public async route(
+    request: UniversalRouterRequest,
+  ): Promise<UniversalRouterResponse> {
+    bootstrapUniversalProviders();
+
+    const mode =
+      request.mode === "auto" ||
+      !request.mode
+        ? inferTaskMode(request)
+        : request.mode;
+
+    const providers =
+      await this.selectProviders(
+        request,
+        mode,
+      );
+
+    if (providers.length === 0) {
+      throw new UniversalError({
+        code: "CONFIGURATION_ERROR",
+        message:
+          "No configured AI provider can handle this request.",
+        statusCode: 503,
+      });
+    }
+
+    const allowFallback =
+      request.allowFallback ??
+      universalConfig.enableProviderFallback;
+
+    const candidates = allowFallback
+      ? providers
+      : providers.slice(0, 1);
+
+    const attempts: UniversalRoutingAttempt[] =
+      [];
+
+    for (
+      let index = 0;
+      index < candidates.length;
+      index += 1
+    ) {
+      const provider = candidates[index];
+      const startedAt = Date.now();
+
+      try {
+        const response =
+          await provider.generate(request);
+
+        attempts.push({
+          providerId: provider.id,
+          success: true,
+          durationMs:
+            Date.now() - startedAt,
+        });
+
+        logger.info(
+          "AI request completed.",
+          {
+            providerId: provider.id,
+            mode,
+            fallbackUsed: index > 0,
+          },
+        );
+
+        return {
+          ...response,
+          routing: {
+            mode,
+            selectedProviderId:
+              provider.id,
+            fallbackUsed: index > 0,
+            attempts,
+          },
+        };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : String(error);
+
+        attempts.push({
+          providerId: provider.id,
+          success: false,
+          durationMs:
+            Date.now() - startedAt,
+          error: errorMessage,
+        });
+
+        logger.warn(
+          "AI provider attempt failed.",
+          {
+            providerId: provider.id,
+            mode,
+            error: errorMessage,
+          },
+        );
+      }
+    }
+
+    throw new UniversalError({
+      code: "PROVIDER_ERROR",
+      message:
+        "All eligible AI providers failed.",
+      statusCode: 502,
+      details: {
+        mode,
+        attempts,
+      },
+    });
+  }
+
+  private async selectProviders(
+    request: UniversalRouterRequest,
+    mode: UniversalTaskMode,
+  ): Promise<
+    ReadonlyArray<UniversalAIProvider>
+  > {
+    const configured =
+      universalProviderRegistry.configured();
+
+    const compatible: UniversalAIProvider[] =
+      [];
+
+    for (const provider of configured) {
+      if (
+        await providerSupportsCapabilities(
+          provider,
+          request.requiredCapabilities ??
+            [],
+        )
+      ) {
+        compatible.push(provider);
+      }
+    }
+
+    const preferredProviderId =
+      request.preferredProviderId?.trim();
+
+    return compatible.sort(
+      (left, right) => {
+        if (
+          preferredProviderId &&
+          left.id === preferredProviderId
+        ) {
+          return -1;
+        }
+
+        if (
+          preferredProviderId &&
+          right.id === preferredProviderId
+        ) {
+          return 1;
+        }
+
+        const priority =
+          PROVIDER_MODE_PRIORITY[mode];
+
+        const leftIndex =
+          priority.indexOf(left.id);
+
+        const rightIndex =
+          priority.indexOf(right.id);
+
+        return normalizePriority(
+          leftIndex,
+        ) -
+          normalizePriority(rightIndex);
+      },
+    );
+  }
+}
+
+function inferTaskMode(
+  request: UniversalRouterRequest,
+): UniversalTaskMode {
+  const prompt = request.messages
+    .map((message) => message.content)
+    .join(" ")
+    .toLowerCase();
+
+  const capabilities =
+    request.requiredCapabilities ?? [];
+
+  if (
+    capabilities.some(
+      (capability) =>
+        capability === "vision" ||
+        capability === "audio" ||
+        capability === "video",
+    )
+  ) {
+    return "multimodal";
+  }
+
+  if (
+    containsAny(prompt, [
+      "code",
+      "typescript",
+      "javascript",
+      "python",
+      "react",
+      "next.js",
+      "api",
+      "bug",
+      "debug",
+      "fonction",
+      "class ",
+      "sql",
+    ])
+  ) {
+    return "code";
+  }
+
+  if (
+    containsAny(prompt, [
+      "analyse approfondie",
+      "raisonne",
+      "raisonnement",
+      "compare",
+      "stratégie",
+      "architecture",
+      "démontre",
+      "résous",
+      "calculate",
+    ])
+  ) {
+    return "reasoning";
+  }
+
+  if (
+    containsAny(prompt, [
+      "créatif",
+      "créative",
+      "histoire",
+      "scénario",
+      "marketing",
+      "slogan",
+      "design",
+      "story",
+    ])
+  ) {
+    return "creative";
+  }
+
+  if (
+    containsAny(prompt, [
+      "résume",
+      "rapidement",
+      "bref",
+      "court",
+      "simple",
+    ])
+  ) {
+    return "fast";
+  }
+
+  return "auto";
+}
+
+async function providerSupportsCapabilities(
+  provider: UniversalAIProvider,
+  requiredCapabilities:
+    ReadonlyArray<UniversalProviderCapability>,
+): Promise<boolean> {
+  if (requiredCapabilities.length === 0) {
+    return true;
+  }
+
+  const models = await provider.listModels();
+
+  return models.some((model) =>
+    requiredCapabilities.every(
+      (requiredCapability) =>
+        model.capabilities.includes(
+          requiredCapability,
+        ),
+    ),
+  );
+}
+
+function normalizePriority(
+  index: number,
+): number {
+  return index === -1
+    ? Number.MAX_SAFE_INTEGER
+    : index;
+}
+
+function containsAny(
+  value: string,
+  keywords: ReadonlyArray<string>,
+): boolean {
+  return keywords.some((keyword) =>
+    value.includes(keyword),
+  );
+}
+
+export const universalAIRouter =
+  new UniversalAIRouter();
+
+==================================================
+PROVIDER MANAGER
+==================================================
+===== C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\catalog.ts =====
+import type {
+  UniversalTaskType,
+} from "./types";
+
+export const OPENROUTER_DEFAULT_MODELS: Readonly<
+  Record<UniversalTaskType, ReadonlyArray<string>>
+> = {
+  general: [
+    "openai/gpt-4.1-mini",
+    "google/gemini-2.5-flash",
+    "anthropic/claude-3.5-haiku",
+  ],
+  reasoning: [
+    "openai/o4-mini",
+    "deepseek/deepseek-r1",
+    "anthropic/claude-sonnet-4",
+  ],
+  code: [
+    "anthropic/claude-sonnet-4",
+    "openai/gpt-4.1",
+    "google/gemini-2.5-pro",
+  ],
+  vision: [
+    "google/gemini-2.5-pro",
+    "openai/gpt-4.1",
+    "anthropic/claude-sonnet-4",
+  ],
+  "long-context": [
+    "google/gemini-2.5-pro",
+    "anthropic/claude-sonnet-4",
+    "openai/gpt-4.1",
+  ],
+  fast: [
+    "google/gemini-2.5-flash",
+    "openai/gpt-4.1-mini",
+    "anthropic/claude-3.5-haiku",
+  ],
+  economy: [
+    "deepseek/deepseek-chat-v3-0324",
+    "google/gemini-2.5-flash-lite",
+    "openai/gpt-4.1-nano",
+  ],
+};
+
+export function selectOpenRouterModels(
+  task: UniversalTaskType = "general",
+): ReadonlyArray<string> {
+  return OPENROUTER_DEFAULT_MODELS[task];
+}
+
+
+===== C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\cost.ts =====
+import type {
+  UniversalUsage,
+} from "./types";
+
+export function estimateUsageCost(input: {
+  readonly promptTokens: number;
+  readonly completionTokens: number;
+  readonly promptPricePerToken?: number;
+  readonly completionPricePerToken?: number;
+}): UniversalUsage {
+  const estimatedCostUsd =
+    input.promptPricePerToken !== undefined &&
+    input.completionPricePerToken !== undefined
+      ? input.promptTokens * input.promptPricePerToken +
+        input.completionTokens * input.completionPricePerToken
+      : undefined;
+
+  return {
+    promptTokens: input.promptTokens,
+    completionTokens: input.completionTokens,
+    totalTokens: input.promptTokens + input.completionTokens,
+    estimatedCostUsd,
+  };
+}
+
+
+===== C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\index.ts =====
+export * from "./catalog";
+export * from "./cost";
+export * from "./manager";
+export * from "./openrouter";
+export * from "./types";
+
+
+===== C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\manager.ts =====
+import { openRouterProvider } from "./openrouter";
+import type {
+  UniversalChatRequest,
+  UniversalChatResponse,
+  UniversalModel,
+  UniversalProviderAdapter,
+  UniversalProviderHealth,
+  UniversalProviderId,
+} from "./types";
+
+export class UniversalProviderManager {
+  private readonly providers = new Map<
+    UniversalProviderId,
+    UniversalProviderAdapter
+  >();
+
+  register(provider: UniversalProviderAdapter): void {
+    this.providers.set(provider.id, provider);
+  }
+
+  get(
+    providerId: UniversalProviderId,
+  ): UniversalProviderAdapter | undefined {
+    return this.providers.get(providerId);
+  }
+
+  listConfigured(): ReadonlyArray<UniversalProviderAdapter> {
+    return Array.from(this.providers.values()).filter(
+      (provider) => provider.isConfigured(),
+    );
+  }
+
+  async listModels(): Promise<ReadonlyArray<UniversalModel>> {
+    const configured = this.listConfigured();
+
+    const results = await Promise.allSettled(
+      configured.map((provider) =>
+        provider.listModels(),
+      ),
+    );
+
+    return results.flatMap((result) =>
+      result.status === "fulfilled"
+        ? result.value
+        : [],
+    );
+  }
+
+  async healthCheck(): Promise<
+    ReadonlyArray<UniversalProviderHealth>
+  > {
+    return Promise.all(
+      Array.from(this.providers.values()).map(
+        (provider) => provider.healthCheck(),
+      ),
+    );
+  }
+
+  async chat(
+    request: UniversalChatRequest,
+  ): Promise<UniversalChatResponse> {
+    const configured = this.listConfigured();
+
+    if (configured.length === 0) {
+      throw new Error(
+        "No AI provider is configured. Add OPENROUTER_API_KEY to .env.local.",
+      );
+    }
+
+    const errors: string[] = [];
+
+    for (const provider of configured) {
+      try {
+        return await provider.chat(request);
+      } catch (error) {
+        errors.push(
+          `${provider.id}: ${
+            error instanceof Error
+              ? error.message
+              : String(error)
+          }`,
+        );
+      }
+    }
+
+    throw new Error(
+      `All configured AI providers failed: ${errors.join(" | ")}`,
+    );
+  }
+
+  async stream(
+    request: UniversalChatRequest,
+  ): Promise<Response> {
+    const configured = this.listConfigured();
+
+    if (configured.length === 0) {
+      throw new Error(
+        "No AI provider is configured. Add OPENROUTER_API_KEY to .env.local.",
+      );
+    }
+
+    const errors: string[] = [];
+
+    for (const provider of configured) {
+      try {
+        return await provider.stream(request);
+      } catch (error) {
+        errors.push(
+          `${provider.id}: ${
+            error instanceof Error
+              ? error.message
+              : String(error)
+          }`,
+        );
+      }
+    }
+
+    throw new Error(
+      `All configured streaming providers failed: ${errors.join(" | ")}`,
+    );
+  }
+}
+
+export const universalProviderManager =
+  new UniversalProviderManager();
+
+universalProviderManager.register(
+  openRouterProvider,
+);
+
+
+===== C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\openrouter.ts =====
+import { estimateUsageCost } from "./cost";
+import { selectOpenRouterModels } from "./catalog";
+import type {
+  UniversalChatRequest,
+  UniversalChatResponse,
+  UniversalModel,
+  UniversalProviderAdapter,
+  UniversalProviderHealth,
+} from "./types";
+
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+const DEFAULT_TIMEOUT_MS = 60_000;
+
+interface OpenRouterModelPayload {
+  readonly id?: unknown;
+  readonly name?: unknown;
+  readonly description?: unknown;
+  readonly context_length?: unknown;
+  readonly architecture?: {
+    readonly input_modalities?: unknown;
+    readonly output_modalities?: unknown;
+  };
+  readonly pricing?: {
+    readonly prompt?: unknown;
+    readonly completion?: unknown;
+  };
+}
+
+interface OpenRouterModelsResponse {
+  readonly data?: unknown;
+}
+
+interface OpenRouterChatResponse {
+  readonly id?: unknown;
+  readonly model?: unknown;
+  readonly choices?: unknown;
+  readonly usage?: {
+    readonly prompt_tokens?: unknown;
+    readonly completion_tokens?: unknown;
+    readonly total_tokens?: unknown;
+  };
+}
+
+function safeString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function safeNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+function safeStringArray(value: unknown): ReadonlyArray<string> {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function createHeaders(): HeadersInit {
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error("OPENROUTER_API_KEY is missing.");
+  }
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ??
+    process.env.OPENROUTER_SITE_URL?.trim();
+
+  const appName =
+    process.env.OPENROUTER_APP_NAME?.trim() ??
+    "Universal AI";
+
+  if (siteUrl) headers["HTTP-Referer"] = siteUrl;
+  if (appName) headers["X-Title"] = appName;
+
+  return headers;
+}
+
+async function fetchOpenRouter(
+  path: string,
+  init: RequestInit,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(`${OPENROUTER_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        ...createHeaders(),
+        ...(init.headers ?? {}),
+      },
+      signal: controller.signal,
+      cache: "no-store",
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function readError(response: Response): Promise<string> {
+  try {
+    return (await response.text()).slice(0, 1_000);
+  } catch {
+    return response.statusText;
+  }
+}
+
+function buildRequestBody(
+  request: UniversalChatRequest,
+  stream: boolean,
+): Record<string, unknown> {
+  const selectedModels = request.model
+    ? [request.model]
+    : selectOpenRouterModels(request.task);
+
+  const body: Record<string, unknown> = {
+    messages: request.messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+      ...(message.name ? { name: message.name } : {}),
+      ...(message.toolCallId
+        ? { tool_call_id: message.toolCallId }
+        : {}),
+    })),
+    stream,
+    provider: {
+      allow_fallbacks: request.allowFallbacks ?? true,
+      require_parameters: request.requireParameters ?? false,
+      data_collection: request.dataCollection ?? "deny",
+      ...(request.sort ? { sort: request.sort } : {}),
+    },
+  };
+
+  if (selectedModels.length === 1) {
+    body.model = selectedModels[0];
+  } else {
+    body.models = selectedModels;
+    body.route = "fallback";
+  }
+
+  if (request.temperature !== undefined) {
+    body.temperature = request.temperature;
+  }
+
+  if (request.maxTokens !== undefined) {
+    body.max_tokens = request.maxTokens;
+  }
+
+  if (request.userId) {
+    body.user = request.userId;
+  }
+
+  return body;
+}
+
+function extractAssistantContent(payload: OpenRouterChatResponse): {
+  readonly content: string;
+  readonly finishReason?: string;
+} {
+  const choices = Array.isArray(payload.choices)
+    ? payload.choices
+    : [];
+
+  const first = choices[0] as
+    | {
+        readonly message?: {
+          readonly content?: unknown;
+        };
+        readonly finish_reason?: unknown;
+      }
+    | undefined;
+
+  return {
+    content: safeString(first?.message?.content),
+    finishReason:
+      safeString(first?.finish_reason) || undefined,
+  };
+}
+
+export const openRouterProvider: UniversalProviderAdapter = {
+  id: "openrouter",
+  name: "OpenRouter",
+
+  isConfigured() {
+    return Boolean(process.env.OPENROUTER_API_KEY?.trim());
+  },
+
+  async listModels(): Promise<ReadonlyArray<UniversalModel>> {
+    const response = await fetchOpenRouter("/models", {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `OpenRouter models ${response.status}: ${await readError(response)}`,
+      );
+    }
+
+    const payload =
+      (await response.json()) as OpenRouterModelsResponse;
+
+    const rawModels = Array.isArray(payload.data)
+      ? payload.data
+      : [];
+
+    return rawModels
+      .map((raw): UniversalModel | null => {
+        const item = raw as OpenRouterModelPayload;
+        const id = safeString(item.id);
+        if (!id) return null;
+
+        const promptPricePerToken =
+          safeNumber(item.pricing?.prompt);
+        const completionPricePerToken =
+          safeNumber(item.pricing?.completion);
+
+        return {
+          id,
+          name: safeString(item.name) || id,
+          description:
+            safeString(item.description) || undefined,
+          contextLength:
+            safeNumber(item.context_length),
+          inputModalities:
+            safeStringArray(
+              item.architecture?.input_modalities,
+            ),
+          outputModalities:
+            safeStringArray(
+              item.architecture?.output_modalities,
+            ),
+          promptPricePerMillion:
+            promptPricePerToken !== undefined
+              ? promptPricePerToken * 1_000_000
+              : undefined,
+          completionPricePerMillion:
+            completionPricePerToken !== undefined
+              ? completionPricePerToken * 1_000_000
+              : undefined,
+          providerId: "openrouter",
+        };
+      })
+      .filter(
+        (model): model is UniversalModel =>
+          model !== null,
+      );
+  },
+
+  async healthCheck(): Promise<UniversalProviderHealth> {
+    if (!this.isConfigured()) {
+      return {
+        providerId: "openrouter",
+        configured: false,
+        reachable: false,
+        error: "OPENROUTER_API_KEY is missing.",
+      };
+    }
+
+    const startedAt = Date.now();
+
+    try {
+      const response = await fetchOpenRouter("/models", {
+        method: "GET",
+      }, 15_000);
+
+      return {
+        providerId: "openrouter",
+        configured: true,
+        reachable: response.ok,
+        latencyMs: Date.now() - startedAt,
+        error: response.ok
+          ? undefined
+          : await readError(response),
+      };
+    } catch (error) {
+      return {
+        providerId: "openrouter",
+        configured: true,
+        reachable: false,
+        latencyMs: Date.now() - startedAt,
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      };
+    }
+  },
+
+  async chat(
+    request: UniversalChatRequest,
+  ): Promise<UniversalChatResponse> {
+    const startedAt = Date.now();
+
+    const response = await fetchOpenRouter(
+      "/chat/completions",
+      {
+        method: "POST",
+        body: JSON.stringify(
+          buildRequestBody(request, false),
+        ),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `OpenRouter chat ${response.status}: ${await readError(response)}`,
+      );
+    }
+
+    const payload =
+      (await response.json()) as OpenRouterChatResponse;
+
+    const extracted =
+      extractAssistantContent(payload);
+
+    const promptTokens =
+      safeNumber(payload.usage?.prompt_tokens) ?? 0;
+    const completionTokens =
+      safeNumber(payload.usage?.completion_tokens) ?? 0;
+
+    return {
+      providerId: "openrouter",
+      model:
+        safeString(payload.model) ||
+        request.model ||
+        selectOpenRouterModels(request.task)[0],
+      content: extracted.content,
+      finishReason: extracted.finishReason,
+      usage: estimateUsageCost({
+        promptTokens,
+        completionTokens,
+      }),
+      durationMs: Date.now() - startedAt,
+      raw: payload,
+    };
+  },
+
+  async stream(
+    request: UniversalChatRequest,
+  ): Promise<Response> {
+    const response = await fetchOpenRouter(
+      "/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Accept: "text/event-stream",
+        },
+        body: JSON.stringify(
+          buildRequestBody(request, true),
+        ),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `OpenRouter stream ${response.status}: ${await readError(response)}`,
+      );
+    }
+
+    return response;
+  },
+};
+
+
+===== C:\Users\gaeta\universal-ai\src\lib\universal\provider-manager\types.ts =====
+export type UniversalProviderId =
+  | "openrouter"
+  | "openai"
+  | "anthropic"
+  | "google";
+
+export type UniversalTaskType =
+  | "general"
+  | "reasoning"
+  | "code"
+  | "vision"
+  | "long-context"
+  | "fast"
+  | "economy";
+
+export type UniversalProviderSort =
+  | "price"
+  | "latency"
+  | "throughput";
+
+export interface UniversalChatMessage {
+  readonly role: "system" | "user" | "assistant" | "tool";
+  readonly content: string;
+  readonly name?: string;
+  readonly toolCallId?: string;
+}
+
+export interface UniversalChatRequest {
+  readonly messages: ReadonlyArray<UniversalChatMessage>;
+  readonly model?: string;
+  readonly task?: UniversalTaskType;
+  readonly stream?: boolean;
+  readonly temperature?: number;
+  readonly maxTokens?: number;
+  readonly userId?: string;
+  readonly sort?: UniversalProviderSort;
+  readonly requireParameters?: boolean;
+  readonly allowFallbacks?: boolean;
+  readonly dataCollection?: "allow" | "deny";
+}
+
+export interface UniversalUsage {
+  readonly promptTokens: number;
+  readonly completionTokens: number;
+  readonly totalTokens: number;
+  readonly estimatedCostUsd?: number;
+}
+
+export interface UniversalChatResponse {
+  readonly providerId: UniversalProviderId;
+  readonly model: string;
+  readonly content: string;
+  readonly finishReason?: string;
+  readonly usage?: UniversalUsage;
+  readonly durationMs: number;
+  readonly raw?: unknown;
+}
+
+export interface UniversalModel {
+  readonly id: string;
+  readonly name: string;
+  readonly description?: string;
+  readonly contextLength?: number;
+  readonly inputModalities: ReadonlyArray<string>;
+  readonly outputModalities: ReadonlyArray<string>;
+  readonly promptPricePerMillion?: number;
+  readonly completionPricePerMillion?: number;
+  readonly providerId: UniversalProviderId;
+}
+
+export interface UniversalProviderHealth {
+  readonly providerId: UniversalProviderId;
+  readonly configured: boolean;
+  readonly reachable: boolean;
+  readonly latencyMs?: number;
+  readonly error?: string;
+}
+
+export interface UniversalProviderAdapter {
+  readonly id: UniversalProviderId;
+  readonly name: string;
+
+  isConfigured(): boolean;
+  listModels(): Promise<ReadonlyArray<UniversalModel>>;
+  healthCheck(): Promise<UniversalProviderHealth>;
+  chat(request: UniversalChatRequest): Promise<UniversalChatResponse>;
+  stream(request: UniversalChatRequest): Promise<Response>;
+}
+
+==================================================
+VARIABLES ENVIRONNEMENT SANS VALEURS
+==================================================
+===== .env.example =====
+NEXT_PUBLIC_SUPABASE_URL=***
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=***
+OPENAI_API_KEY=***
+ANTHROPIC_API_KEY=***
+GOOGLE_GENERATIVE_AI_API_KEY=***
+OPENAI_DEFAULT_MODEL=***
+ANTHROPIC_DEFAULT_MODEL=***
+GEMINI_DEFAULT_MODEL=***
+NEXT_PUBLIC_APP_URL=***
+NEXT_PUBLIC_APP_NAME=***
+NEXT_PUBLIC_APP_VERSION=***
+UNIVERSAL_LOG_LEVEL=***
+UNIVERSAL_PROVIDER_FALLBACK=***
+UNIVERSAL_REQUEST_TIMEOUT_MS=***
+TAVILY_API_KEY=***
+EXA_API_KEY=***
+BRAVE_SEARCH_API_KEY=***
+===== .env.local =====
+OPENAI_API_KEY=***
+ANTHROPIC_API_KEY=***
+GOOGLE_GENERATIVE_AI_API_KEY=***
+OPENAI_DEFAULT_MODEL=***
+ANTHROPIC_DEFAULT_MODEL=***
+GEMINI_DEFAULT_MODEL=***
+NEXT_PUBLIC_APP_URL=***
+OPENAI_ENABLED=***
+OPENAI_API_KEY=***
+OPENAI_MODEL=***
+ANTHROPIC_ENABLED=***
+ANTHROPIC_API_KEY=***
+ANTHROPIC_MODEL=***
+GOOGLE_AI_ENABLED=***
+GOOGLE_AI_API_KEY=***
+GOOGLE_AI_MODEL=***
+DEEPSEEK_ENABLED=***
+DEEPSEEK_API_KEY=***
+DEEPSEEK_MODEL=***
+TAVILY_API_KEY=***
+EXA_API_KEY=***
+BRAVE_SEARCH_API_KEY=***
+OPENROUTER_API_KEY=***
+OPENROUTER_APP_NAME=***
+NEXT_PUBLIC_APP_URL=***
