@@ -46,3 +46,8 @@ next-env.d.ts
 backups/
 
 .local-backups/
+browser-final-audit/
+browser-final-audit.zip
+build-error.txt
+tsconfig.backup-*.json
+universal-agent-audit.txt
