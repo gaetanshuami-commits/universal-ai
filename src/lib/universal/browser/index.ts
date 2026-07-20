@@ -6,3 +6,4 @@ export * from "./screenshots";
 export * from "./pdf";
 export * from "./downloads";
 export * from "./cookies";
+export * from "./storage";
