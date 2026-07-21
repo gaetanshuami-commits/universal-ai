@@ -84,6 +84,31 @@ export interface AgentRun {
   readonly error?: string;
 }
 
+export type AgentRuntimeEventType =
+  | "agent.started"
+  | "plan.created"
+  | "step.started"
+  | "step.completed"
+  | "step.failed"
+  | "step.skipped"
+  | "synthesis.started"
+  | "synthesis.completed"
+  | "agent.completed";
+
+export interface AgentRuntimeEvent {
+  readonly type: AgentRuntimeEventType;
+  readonly timestamp: string;
+  readonly runId?: string;
+  readonly planId?: string;
+  readonly stepId?: string;
+  readonly order?: number;
+  readonly title?: string;
+  readonly tool?: AgentToolId;
+  readonly status?: AgentStepStatus | AgentRunStatus;
+  readonly message?: string;
+  readonly data?: unknown;
+}
+
 export interface RunAgentInput {
   readonly goal: string;
   readonly context?: string;
@@ -92,6 +117,9 @@ export interface RunAgentInput {
   readonly maxRetriesPerStep?: number;
   readonly stepTimeoutMs?: number;
   readonly maxParallelSteps?: number;
+  readonly onEvent?: (
+    event: AgentRuntimeEvent,
+  ) => void | Promise<void>;
   readonly signal?: AbortSignal;
 }
 
@@ -103,4 +131,3 @@ export interface AgentRuntimeResult {
     | "fallback";
   readonly plannerModel?: string;
 }
-

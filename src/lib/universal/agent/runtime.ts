@@ -8,6 +8,7 @@ import { createAgentPlan } from "./planner";
 import type {
   AgentPlan,
   AgentPlanStep,
+  AgentRuntimeEvent,
   AgentRuntimeResult,
   AgentRun,
   AgentStepExecution,
@@ -86,6 +87,38 @@ export class AgentCancellationError extends Error {
     this.name = "AgentCancellationError";
   }
 }
+
+async function emitAgentRuntimeEvent(
+  input: RunAgentInput,
+  event: AgentRuntimeEvent,
+): Promise<void> {
+  if (!input.onEvent) {
+    return;
+  }
+
+  try {
+    await input.onEvent(event);
+  } catch {
+    /*
+     * Une erreur du transport SSE ne doit pas
+     * casser l'exécution réelle de l'agent.
+     */
+  }
+}
+
+function createAgentRuntimeEvent(
+  event: Omit<
+    AgentRuntimeEvent,
+    "timestamp"
+  >,
+): AgentRuntimeEvent {
+  return {
+    ...event,
+    timestamp:
+      new Date().toISOString(),
+  };
+}
+
 
 function throwIfAgentCancelled(
   signal: AbortSignal | undefined,
@@ -603,7 +636,25 @@ async function generateFinalAnswer(
 export async function runAutonomousAgent(
   input: RunAgentInput,
 ): Promise<AgentRuntimeResult> {
-  throwIfAgentCancelled(input.signal);
+  throwIfAgentCancelled(
+    input.signal,
+  );
+
+  const runId = randomUUID();
+
+  const startedAt =
+    new Date().toISOString();
+
+  await emitAgentRuntimeEvent(
+    input,
+    createAgentRuntimeEvent({
+      type: "agent.started",
+      runId,
+      status: "running",
+      message:
+        "Exécution de l'agent démarrée.",
+    }),
+  );
 
   const planner =
     await createAgentPlan({
@@ -612,20 +663,35 @@ export async function runAutonomousAgent(
       maxSteps: input.maxSteps,
     });
 
-  throwIfAgentCancelled(input.signal);
+  throwIfAgentCancelled(
+    input.signal,
+  );
 
   const plan = planner.plan;
+
+  await emitAgentRuntimeEvent(
+    input,
+    createAgentRuntimeEvent({
+      type: "plan.created",
+      runId,
+      planId: plan.id,
+      message:
+        "Plan d'exécution créé.",
+      data: {
+        generatedBy:
+          planner.generatedBy,
+        model:
+          planner.model,
+        plan,
+      },
+    }),
+  );
 
   const executions:
     AgentStepExecution[] = [];
 
   const pendingSteps =
     [...plan.steps];
-
-  const runId = randomUUID();
-
-  const startedAt =
-    new Date().toISOString();
 
   const maxRetries =
     normalizeMaxRetries(
@@ -647,10 +713,6 @@ export async function runAutonomousAgent(
       input.signal,
     );
 
-    /*
-     * Une étape est bloquée uniquement lorsqu’une de ses
-     * dépendances a déjà échoué ou a été ignorée.
-     */
     const blockedSteps =
       pendingSteps.filter(
         (step) =>
@@ -668,15 +730,36 @@ export async function runAutonomousAgent(
 
     if (blockedSteps.length > 0) {
       for (const step of blockedSteps) {
-        executions.push({
-          stepId: step.id,
-          order: step.order,
-          title: step.title,
-          tool: step.tool,
-          status: "skipped",
-          error:
-            "Une dépendance requise n’a pas été terminée.",
-        });
+        const skipped:
+          AgentStepExecution = {
+            stepId: step.id,
+            order: step.order,
+            title: step.title,
+            tool: step.tool,
+            status: "skipped",
+            error:
+              "Une dépendance requise n'a pas été terminée.",
+          };
+
+        executions.push(
+          skipped,
+        );
+
+        await emitAgentRuntimeEvent(
+          input,
+          createAgentRuntimeEvent({
+            type: "step.skipped",
+            runId,
+            planId: plan.id,
+            stepId: step.id,
+            order: step.order,
+            title: step.title,
+            tool: step.tool,
+            status: "skipped",
+            message:
+              skipped.error,
+          }),
+        );
       }
 
       const blockedIds =
@@ -709,10 +792,6 @@ export async function runAutonomousAgent(
       break;
     }
 
-    /*
-     * Une étape est exécutable lorsque toutes ses dépendances
-     * sont terminées avec succès.
-     */
     const runnableSteps =
       pendingSteps.filter(
         (step) =>
@@ -728,36 +807,73 @@ export async function runAutonomousAgent(
           ),
       );
 
-    /*
-     * Aucun travail exécutable signifie qu’il existe une
-     * dépendance circulaire ou une dépendance introuvable.
-     */
     if (runnableSteps.length === 0) {
       for (const step of pendingSteps) {
-        executions.push({
-          stepId: step.id,
-          order: step.order,
-          title: step.title,
-          tool: step.tool,
-          status: "skipped",
-          error:
-            "L’étape possède une dépendance circulaire ou introuvable.",
-        });
+        const skipped:
+          AgentStepExecution = {
+            stepId: step.id,
+            order: step.order,
+            title: step.title,
+            tool: step.tool,
+            status: "skipped",
+            error:
+              "L'étape possède une dépendance circulaire ou introuvable.",
+          };
+
+        executions.push(
+          skipped,
+        );
+
+        await emitAgentRuntimeEvent(
+          input,
+          createAgentRuntimeEvent({
+            type: "step.skipped",
+            runId,
+            planId: plan.id,
+            stepId: step.id,
+            order: step.order,
+            title: step.title,
+            tool: step.tool,
+            status: "skipped",
+            message:
+              skipped.error,
+          }),
+        );
       }
 
       pendingSteps.length = 0;
       break;
     }
 
-    /*
-     * Le batch contient uniquement des étapes indépendantes
-     * dont toutes les dépendances sont déjà terminées.
-     */
     const batch =
       runnableSteps.slice(
         0,
         maxParallelSteps,
       );
+
+    await Promise.all(
+      batch.map(
+        (step) =>
+          emitAgentRuntimeEvent(
+            input,
+            createAgentRuntimeEvent({
+              type: "step.started",
+              runId,
+              planId: plan.id,
+              stepId: step.id,
+              order: step.order,
+              title: step.title,
+              tool: step.tool,
+              status: "running",
+              message:
+                "Étape démarrée.",
+            }),
+          ),
+      ),
+    );
+
+    const executionSnapshot =
+      [...executions];
 
     const batchResults =
       await Promise.all(
@@ -766,7 +882,7 @@ export async function runAutonomousAgent(
             executeAgentStepWithRetry(
               plan,
               step,
-              executions,
+              executionSnapshot,
               maxRetries,
               stepTimeoutMs,
               input.signal,
@@ -780,6 +896,50 @@ export async function runAutonomousAgent(
 
     executions.push(
       ...batchResults,
+    );
+
+    await Promise.all(
+      batchResults.map(
+        (execution) => {
+          const type =
+            execution.status ===
+            "completed"
+              ? "step.completed"
+              : execution.status ===
+                  "failed"
+                ? "step.failed"
+                : "step.skipped";
+
+          return emitAgentRuntimeEvent(
+            input,
+            createAgentRuntimeEvent({
+              type,
+              runId,
+              planId: plan.id,
+              stepId:
+                execution.stepId,
+              order:
+                execution.order,
+              title:
+                execution.title,
+              tool:
+                execution.tool,
+              status:
+                execution.status,
+              message:
+                execution.error ??
+                (
+                  execution.status ===
+                  "completed"
+                    ? "Étape terminée."
+                    : "Étape non terminée."
+                ),
+              data:
+                execution,
+            }),
+          );
+        },
+      ),
     );
 
     const completedBatchIds =
@@ -819,15 +979,36 @@ export async function runAutonomousAgent(
       input.stopOnError === true
     ) {
       for (const step of pendingSteps) {
-        executions.push({
-          stepId: step.id,
-          order: step.order,
-          title: step.title,
-          tool: step.tool,
-          status: "skipped",
-          error:
-            "Exécution interrompue après l’échec d’une étape.",
-        });
+        const skipped:
+          AgentStepExecution = {
+            stepId: step.id,
+            order: step.order,
+            title: step.title,
+            tool: step.tool,
+            status: "skipped",
+            error:
+              "Exécution interrompue après l'échec d'une étape.",
+          };
+
+        executions.push(
+          skipped,
+        );
+
+        await emitAgentRuntimeEvent(
+          input,
+          createAgentRuntimeEvent({
+            type: "step.skipped",
+            runId,
+            planId: plan.id,
+            stepId: step.id,
+            order: step.order,
+            title: step.title,
+            tool: step.tool,
+            status: "skipped",
+            message:
+              skipped.error,
+          }),
+        );
       }
 
       pendingSteps.length = 0;
@@ -839,10 +1020,6 @@ export async function runAutonomousAgent(
     input.signal,
   );
 
-  /*
-   * L’ordre final correspond toujours à l’ordre du plan,
-   * même lorsque les étapes ont été exécutées en parallèle.
-   */
   executions.sort(
     (left, right) =>
       left.order - right.order,
@@ -867,6 +1044,19 @@ export async function runAutonomousAgent(
     | undefined;
 
   if (completedSteps.length > 0) {
+    await emitAgentRuntimeEvent(
+      input,
+      createAgentRuntimeEvent({
+        type:
+          "synthesis.started",
+        runId,
+        planId: plan.id,
+        status: "running",
+        message:
+          "Synthèse finale démarrée.",
+      }),
+    );
+
     finalAnswer =
       await withTimeout(
         generateFinalAnswer(
@@ -880,6 +1070,22 @@ export async function runAutonomousAgent(
 
     throwIfAgentCancelled(
       input.signal,
+    );
+
+    await emitAgentRuntimeEvent(
+      input,
+      createAgentRuntimeEvent({
+        type:
+          "synthesis.completed",
+        runId,
+        planId: plan.id,
+        status: "completed",
+        message:
+          "Synthèse finale terminée.",
+        data: {
+          finalAnswer,
+        },
+      }),
     );
   }
 
@@ -904,9 +1110,27 @@ export async function runAutonomousAgent(
     finalAnswer,
     error:
       status === "failed"
-        ? "L’agent n’a pas pu terminer correctement la tâche."
+        ? "L'agent n'a pas pu terminer correctement la tâche."
         : undefined,
   };
+
+  await emitAgentRuntimeEvent(
+    input,
+    createAgentRuntimeEvent({
+      type: "agent.completed",
+      runId,
+      planId: plan.id,
+      status: run.status,
+      message:
+        run.status ===
+        "completed"
+          ? "Exécution de l'agent terminée."
+          : "Exécution terminée avec une erreur.",
+      data: {
+        run,
+      },
+    }),
+  );
 
   return {
     plan,
