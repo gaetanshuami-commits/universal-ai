@@ -57,6 +57,26 @@ function normalizeMaxRetries(
 }
 
 
+
+function normalizeMaxParallelSteps(
+  value: number | undefined,
+): number {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value)
+  ) {
+    return 3;
+  }
+
+  return Math.min(
+    8,
+    Math.max(
+      1,
+      Math.floor(value),
+    ),
+  );
+}
+
 export class AgentCancellationError extends Error {
   constructor(
     message =
@@ -579,6 +599,7 @@ async function generateFinalAnswer(
 }
 
 
+
 export async function runAutonomousAgent(
   input: RunAgentInput,
 ): Promise<AgentRuntimeResult> {
@@ -594,10 +615,15 @@ export async function runAutonomousAgent(
   throwIfAgentCancelled(input.signal);
 
   const plan = planner.plan;
+
   const executions:
     AgentStepExecution[] = [];
 
+  const pendingSteps =
+    [...plan.steps];
+
   const runId = randomUUID();
+
   const startedAt =
     new Date().toISOString();
 
@@ -611,62 +637,216 @@ export async function runAutonomousAgent(
       input.stepTimeoutMs,
     );
 
-  for (const step of plan.steps) {
+  const maxParallelSteps =
+    normalizeMaxParallelSteps(
+      input.maxParallelSteps,
+    );
+
+  while (pendingSteps.length > 0) {
     throwIfAgentCancelled(
       input.signal,
     );
 
-    const dependencyFailed =
-      step.dependsOn.some(
-        (dependencyId) =>
-          !executions.some(
-            (execution) =>
-              execution.stepId ===
-                dependencyId &&
-              execution.status ===
-                "completed",
+    /*
+     * Une étape est bloquée uniquement lorsqu’une de ses
+     * dépendances a déjà échoué ou a été ignorée.
+     */
+    const blockedSteps =
+      pendingSteps.filter(
+        (step) =>
+          step.dependsOn.some(
+            (dependencyId) =>
+              executions.some(
+                (execution) =>
+                  execution.stepId ===
+                    dependencyId &&
+                  execution.status !==
+                    "completed",
+              ),
           ),
       );
 
-    if (dependencyFailed) {
-      executions.push({
-        stepId: step.id,
-        order: step.order,
-        title: step.title,
-        tool: step.tool,
-        status: "skipped",
-        error:
-          "Une dépendance requise n’a pas été terminée.",
-      });
+    if (blockedSteps.length > 0) {
+      for (const step of blockedSteps) {
+        executions.push({
+          stepId: step.id,
+          order: step.order,
+          title: step.title,
+          tool: step.tool,
+          status: "skipped",
+          error:
+            "Une dépendance requise n’a pas été terminée.",
+        });
+      }
 
-      continue;
+      const blockedIds =
+        new Set(
+          blockedSteps.map(
+            (step) => step.id,
+          ),
+        );
+
+      for (
+        let index =
+          pendingSteps.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        if (
+          blockedIds.has(
+            pendingSteps[index].id,
+          )
+        ) {
+          pendingSteps.splice(
+            index,
+            1,
+          );
+        }
+      }
     }
 
-    const execution =
-      await executeAgentStepWithRetry(
-        plan,
-        step,
-        executions,
-        maxRetries,
-        stepTimeoutMs,
-        input.signal,
+    if (pendingSteps.length === 0) {
+      break;
+    }
+
+    /*
+     * Une étape est exécutable lorsque toutes ses dépendances
+     * sont terminées avec succès.
+     */
+    const runnableSteps =
+      pendingSteps.filter(
+        (step) =>
+          step.dependsOn.every(
+            (dependencyId) =>
+              executions.some(
+                (execution) =>
+                  execution.stepId ===
+                    dependencyId &&
+                  execution.status ===
+                    "completed",
+              ),
+          ),
+      );
+
+    /*
+     * Aucun travail exécutable signifie qu’il existe une
+     * dépendance circulaire ou une dépendance introuvable.
+     */
+    if (runnableSteps.length === 0) {
+      for (const step of pendingSteps) {
+        executions.push({
+          stepId: step.id,
+          order: step.order,
+          title: step.title,
+          tool: step.tool,
+          status: "skipped",
+          error:
+            "L’étape possède une dépendance circulaire ou introuvable.",
+        });
+      }
+
+      pendingSteps.length = 0;
+      break;
+    }
+
+    /*
+     * Le batch contient uniquement des étapes indépendantes
+     * dont toutes les dépendances sont déjà terminées.
+     */
+    const batch =
+      runnableSteps.slice(
+        0,
+        maxParallelSteps,
+      );
+
+    const batchResults =
+      await Promise.all(
+        batch.map(
+          (step) =>
+            executeAgentStepWithRetry(
+              plan,
+              step,
+              executions,
+              maxRetries,
+              stepTimeoutMs,
+              input.signal,
+            ),
+        ),
       );
 
     throwIfAgentCancelled(
       input.signal,
     );
 
-    executions.push(execution);
+    executions.push(
+      ...batchResults,
+    );
+
+    const completedBatchIds =
+      new Set(
+        batch.map(
+          (step) => step.id,
+        ),
+      );
+
+    for (
+      let index =
+        pendingSteps.length - 1;
+      index >= 0;
+      index -= 1
+    ) {
+      if (
+        completedBatchIds.has(
+          pendingSteps[index].id,
+        )
+      ) {
+        pendingSteps.splice(
+          index,
+          1,
+        );
+      }
+    }
+
+    const batchFailed =
+      batchResults.some(
+        (execution) =>
+          execution.status ===
+          "failed",
+      );
 
     if (
-      execution.status === "failed" &&
+      batchFailed &&
       input.stopOnError === true
     ) {
+      for (const step of pendingSteps) {
+        executions.push({
+          stepId: step.id,
+          order: step.order,
+          title: step.title,
+          tool: step.tool,
+          status: "skipped",
+          error:
+            "Exécution interrompue après l’échec d’une étape.",
+        });
+      }
+
+      pendingSteps.length = 0;
       break;
     }
   }
 
-  throwIfAgentCancelled(input.signal);
+  throwIfAgentCancelled(
+    input.signal,
+  );
+
+  /*
+   * L’ordre final correspond toujours à l’ordre du plan,
+   * même lorsque les étapes ont été exécutées en parallèle.
+   */
+  executions.sort(
+    (left, right) =>
+      left.order - right.order,
+  );
 
   const completedSteps =
     executions.filter(

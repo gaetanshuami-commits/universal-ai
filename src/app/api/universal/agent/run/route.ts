@@ -12,6 +12,7 @@ interface RunAgentRequestBody {
   readonly stopOnError?: unknown;
   readonly maxRetriesPerStep?: unknown;
   readonly stepTimeoutMs?: unknown;
+  readonly maxParallelSteps?: unknown;
 }
 
 export const runtime = "nodejs";
@@ -66,6 +67,15 @@ export async function POST(
         ? body.stepTimeoutMs
         : undefined;
 
+    const maxParallelSteps =
+      typeof body.maxParallelSteps ===
+        "number" &&
+      Number.isFinite(
+        body.maxParallelSteps,
+      )
+        ? body.maxParallelSteps
+        : undefined;
+
     if (goal.length < 3) {
       return NextResponse.json(
         {
@@ -101,6 +111,7 @@ export async function POST(
         stopOnError,
         maxRetriesPerStep,
         stepTimeoutMs,
+        maxParallelSteps,
         signal: request.signal,
       });
 
