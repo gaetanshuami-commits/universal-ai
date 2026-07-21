@@ -56,43 +56,163 @@ function normalizeMaxRetries(
   );
 }
 
+
+export class AgentCancellationError extends Error {
+  constructor(
+    message =
+      "L’exécution de l’agent a été annulée.",
+  ) {
+    super(message);
+    this.name = "AgentCancellationError";
+  }
+}
+
+function throwIfAgentCancelled(
+  signal: AbortSignal | undefined,
+): void {
+  if (signal?.aborted === true) {
+    throw new AgentCancellationError();
+  }
+}
+
 function wait(
   durationMs: number,
+  signal?: AbortSignal,
 ): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, durationMs);
+  throwIfAgentCancelled(signal);
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    let timeoutHandle:
+      | ReturnType<typeof setTimeout>
+      | undefined;
+
+    const cleanup = (): void => {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+
+      signal?.removeEventListener(
+        "abort",
+        handleAbort,
+      );
+    };
+
+    const complete = (): void => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      cleanup();
+      resolve();
+    };
+
+    const handleAbort = (): void => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      cleanup();
+      reject(new AgentCancellationError());
+    };
+
+    timeoutHandle =
+      setTimeout(
+        complete,
+        durationMs,
+      );
+
+    signal?.addEventListener(
+      "abort",
+      handleAbort,
+      {
+        once: true,
+      },
+    );
+
+    if (signal?.aborted === true) {
+      handleAbort();
+    }
   });
 }
+
 
 async function withTimeout<T>(
   operation: Promise<T>,
   timeoutMs: number,
   label: string,
+  signal?: AbortSignal,
 ): Promise<T> {
+  throwIfAgentCancelled(signal);
+
   let timeoutHandle:
     | ReturnType<typeof setTimeout>
     | undefined;
 
-  const timeout = new Promise<never>(
-    (_, reject) => {
-      timeoutHandle = setTimeout(() => {
-        reject(
-          new Error(
-            `${label} a dépassé le délai autorisé.`,
-          ),
+  let abortHandler:
+    | (() => void)
+    | undefined;
+
+  const timeout =
+    new Promise<never>(
+      (_, reject) => {
+        timeoutHandle =
+          setTimeout(() => {
+            reject(
+              new Error(
+                `${label} a dépassé le délai autorisé.`,
+              ),
+            );
+          }, timeoutMs);
+      },
+    );
+
+  const cancellation =
+    new Promise<never>(
+      (_, reject) => {
+        if (!signal) {
+          return;
+        }
+
+        abortHandler = (): void => {
+          reject(
+            new AgentCancellationError(),
+          );
+        };
+
+        signal.addEventListener(
+          "abort",
+          abortHandler,
+          {
+            once: true,
+          },
         );
-      }, timeoutMs);
-    },
-  );
+
+        if (signal.aborted) {
+          abortHandler();
+        }
+      },
+    );
 
   try {
     return await Promise.race([
       operation,
       timeout,
+      cancellation,
     ]);
   } finally {
     if (timeoutHandle) {
       clearTimeout(timeoutHandle);
+    }
+
+    if (signal && abortHandler) {
+      signal.removeEventListener(
+        "abort",
+        abortHandler,
+      );
     }
   }
 }
@@ -302,34 +422,47 @@ async function executeAgentStep(
   );
 }
 
+
 async function executeAgentStepWithRetry(
   plan: AgentPlan,
   step: AgentPlanStep,
-  executions: ReadonlyArray<AgentStepExecution>,
+  executions:
+    ReadonlyArray<AgentStepExecution>,
   maxRetries: number,
   timeoutMs: number,
+  signal?: AbortSignal,
 ): Promise<AgentStepExecution> {
+  throwIfAgentCancelled(signal);
+
   const startedAtDate = new Date();
-  const startedAt = startedAtDate.toISOString();
+  const startedAt =
+    startedAtDate.toISOString();
 
   let attempt = 0;
   let lastError = "";
 
   while (attempt <= maxRetries) {
+    throwIfAgentCancelled(signal);
+
     attempt += 1;
 
     try {
-      const output = await withTimeout(
-        executeAgentStep(
-          plan,
-          step,
-          executions,
-        ),
-        timeoutMs,
-        `L’étape « ${step.title} »`,
-      );
+      const output =
+        await withTimeout(
+          executeAgentStep(
+            plan,
+            step,
+            executions,
+          ),
+          timeoutMs,
+          `L’étape « ${step.title} »`,
+          signal,
+        );
 
-      const completedAtDate = new Date();
+      throwIfAgentCancelled(signal);
+
+      const completedAtDate =
+        new Date();
 
       return {
         stepId: step.id,
@@ -347,6 +480,14 @@ async function executeAgentStepWithRetry(
         output,
       };
     } catch (error) {
+      if (
+        error instanceof
+          AgentCancellationError ||
+        signal?.aborted === true
+      ) {
+        throw new AgentCancellationError();
+      }
+
       lastError =
         error instanceof Error
           ? error.message
@@ -355,12 +496,16 @@ async function executeAgentStepWithRetry(
       if (attempt <= maxRetries) {
         await wait(
           RETRY_DELAY_MS * attempt,
+          signal,
         );
       }
     }
   }
 
-  const completedAtDate = new Date();
+  throwIfAgentCancelled(signal);
+
+  const completedAtDate =
+    new Date();
 
   return {
     stepId: step.id,
@@ -433,9 +578,12 @@ async function generateFinalAnswer(
   return response.content.trim();
 }
 
+
 export async function runAutonomousAgent(
   input: RunAgentInput,
 ): Promise<AgentRuntimeResult> {
+  throwIfAgentCancelled(input.signal);
+
   const planner =
     await createAgentPlan({
       goal: input.goal,
@@ -443,8 +591,11 @@ export async function runAutonomousAgent(
       maxSteps: input.maxSteps,
     });
 
+  throwIfAgentCancelled(input.signal);
+
   const plan = planner.plan;
-  const executions: AgentStepExecution[] = [];
+  const executions:
+    AgentStepExecution[] = [];
 
   const runId = randomUUID();
   const startedAt =
@@ -461,13 +612,19 @@ export async function runAutonomousAgent(
     );
 
   for (const step of plan.steps) {
+    throwIfAgentCancelled(
+      input.signal,
+    );
+
     const dependencyFailed =
       step.dependsOn.some(
         (dependencyId) =>
           !executions.some(
             (execution) =>
-              execution.stepId === dependencyId &&
-              execution.status === "completed",
+              execution.stepId ===
+                dependencyId &&
+              execution.status ===
+                "completed",
           ),
       );
 
@@ -492,7 +649,12 @@ export async function runAutonomousAgent(
         executions,
         maxRetries,
         stepTimeoutMs,
+        input.signal,
       );
+
+    throwIfAgentCancelled(
+      input.signal,
+    );
 
     executions.push(execution);
 
@@ -504,38 +666,51 @@ export async function runAutonomousAgent(
     }
   }
 
+  throwIfAgentCancelled(input.signal);
+
   const completedSteps =
     executions.filter(
       (execution) =>
-        execution.status === "completed",
+        execution.status ===
+        "completed",
     );
 
   const failedSteps =
     executions.filter(
       (execution) =>
-        execution.status === "failed",
+        execution.status ===
+        "failed",
     );
 
-  let finalAnswer: string | undefined;
+  let finalAnswer:
+    | string
+    | undefined;
 
   if (completedSteps.length > 0) {
-    finalAnswer = await withTimeout(
-      generateFinalAnswer(
-        plan,
-        executions,
-      ),
-      stepTimeoutMs,
-      "La synthèse finale",
+    finalAnswer =
+      await withTimeout(
+        generateFinalAnswer(
+          plan,
+          executions,
+        ),
+        stepTimeoutMs,
+        "La synthèse finale",
+        input.signal,
+      );
+
+    throwIfAgentCancelled(
+      input.signal,
     );
   }
 
-  const status: AgentRun["status"] =
-    completedSteps.length === 0
-      ? "failed"
-      : input.stopOnError === true &&
-          failedSteps.length > 0
+  const status:
+    AgentRun["status"] =
+      completedSteps.length === 0
         ? "failed"
-        : "completed";
+        : input.stopOnError === true &&
+            failedSteps.length > 0
+          ? "failed"
+          : "completed";
 
   const run: AgentRun = {
     id: runId,
@@ -562,4 +737,3 @@ export async function runAutonomousAgent(
       planner.model,
   };
 }
-

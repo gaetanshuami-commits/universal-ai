@@ -91,6 +91,7 @@ export interface RunAgentInput {
   readonly stopOnError?: boolean;
   readonly maxRetriesPerStep?: number;
   readonly stepTimeoutMs?: number;
+  readonly signal?: AbortSignal;
 }
 
 export interface AgentRuntimeResult {
