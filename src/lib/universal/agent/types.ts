@@ -66,6 +66,7 @@ export interface AgentStepExecution {
   readonly startedAt?: string;
   readonly completedAt?: string;
   readonly durationMs?: number;
+  readonly attempts?: number;
   readonly output?: string;
   readonly error?: string;
 }
@@ -88,6 +89,8 @@ export interface RunAgentInput {
   readonly context?: string;
   readonly maxSteps?: number;
   readonly stopOnError?: boolean;
+  readonly maxRetriesPerStep?: number;
+  readonly stepTimeoutMs?: number;
 }
 
 export interface AgentRuntimeResult {
@@ -98,3 +101,4 @@ export interface AgentRuntimeResult {
     | "fallback";
   readonly plannerModel?: string;
 }
+

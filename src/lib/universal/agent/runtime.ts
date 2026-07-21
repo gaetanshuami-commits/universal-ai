@@ -14,8 +14,55 @@ import type {
   RunAgentInput,
 } from "./types";
 
-const STEP_TIMEOUT_MS = 45_000;
+const DEFAULT_STEP_TIMEOUT_MS = 45_000;
+const MIN_STEP_TIMEOUT_MS = 5_000;
+const MAX_STEP_TIMEOUT_MS = 180_000;
+
+const DEFAULT_MAX_RETRIES_PER_STEP = 1;
+const MAX_RETRIES_PER_STEP = 3;
+const RETRY_DELAY_MS = 750;
+
 const MAX_CONTEXT_LENGTH = 18_000;
+
+function normalizeStepTimeout(
+  value: number | undefined,
+): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_STEP_TIMEOUT_MS;
+  }
+
+  return Math.min(
+    MAX_STEP_TIMEOUT_MS,
+    Math.max(
+      MIN_STEP_TIMEOUT_MS,
+      Math.floor(value as number),
+    ),
+  );
+}
+
+function normalizeMaxRetries(
+  value: number | undefined,
+): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_MAX_RETRIES_PER_STEP;
+  }
+
+  return Math.min(
+    MAX_RETRIES_PER_STEP,
+    Math.max(
+      0,
+      Math.floor(value as number),
+    ),
+  );
+}
+
+function wait(
+  durationMs: number,
+): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
+}
 
 async function withTimeout<T>(
   operation: Promise<T>,
@@ -255,6 +302,83 @@ async function executeAgentStep(
   );
 }
 
+async function executeAgentStepWithRetry(
+  plan: AgentPlan,
+  step: AgentPlanStep,
+  executions: ReadonlyArray<AgentStepExecution>,
+  maxRetries: number,
+  timeoutMs: number,
+): Promise<AgentStepExecution> {
+  const startedAtDate = new Date();
+  const startedAt = startedAtDate.toISOString();
+
+  let attempt = 0;
+  let lastError = "";
+
+  while (attempt <= maxRetries) {
+    attempt += 1;
+
+    try {
+      const output = await withTimeout(
+        executeAgentStep(
+          plan,
+          step,
+          executions,
+        ),
+        timeoutMs,
+        `L’étape « ${step.title} »`,
+      );
+
+      const completedAtDate = new Date();
+
+      return {
+        stepId: step.id,
+        order: step.order,
+        title: step.title,
+        tool: step.tool,
+        status: "completed",
+        startedAt,
+        completedAt:
+          completedAtDate.toISOString(),
+        durationMs:
+          completedAtDate.getTime() -
+          startedAtDate.getTime(),
+        attempts: attempt,
+        output,
+      };
+    } catch (error) {
+      lastError =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      if (attempt <= maxRetries) {
+        await wait(
+          RETRY_DELAY_MS * attempt,
+        );
+      }
+    }
+  }
+
+  const completedAtDate = new Date();
+
+  return {
+    stepId: step.id,
+    order: step.order,
+    title: step.title,
+    tool: step.tool,
+    status: "failed",
+    startedAt,
+    completedAt:
+      completedAtDate.toISOString(),
+    durationMs:
+      completedAtDate.getTime() -
+      startedAtDate.getTime(),
+    attempts: attempt,
+    error: lastError,
+  };
+}
+
 async function generateFinalAnswer(
   plan: AgentPlan,
   executions: ReadonlyArray<AgentStepExecution>,
@@ -326,6 +450,16 @@ export async function runAutonomousAgent(
   const startedAt =
     new Date().toISOString();
 
+  const maxRetries =
+    normalizeMaxRetries(
+      input.maxRetriesPerStep,
+    );
+
+  const stepTimeoutMs =
+    normalizeStepTimeout(
+      input.stepTimeoutMs,
+    );
+
   for (const step of plan.steps) {
     const dependencyFailed =
       step.dependsOn.some(
@@ -351,63 +485,22 @@ export async function runAutonomousAgent(
       continue;
     }
 
-    const startTime = Date.now();
-    const stepStartedAt =
-      new Date(startTime).toISOString();
-
-    try {
-      const output = await withTimeout(
-        executeAgentStep(
-          plan,
-          step,
-          executions,
-        ),
-        STEP_TIMEOUT_MS,
-        `L’étape « ${step.title} »`,
+    const execution =
+      await executeAgentStepWithRetry(
+        plan,
+        step,
+        executions,
+        maxRetries,
+        stepTimeoutMs,
       );
 
-      const completionTime =
-        new Date();
+    executions.push(execution);
 
-      executions.push({
-        stepId: step.id,
-        order: step.order,
-        title: step.title,
-        tool: step.tool,
-        status: "completed",
-        startedAt: stepStartedAt,
-        completedAt:
-          completionTime.toISOString(),
-        durationMs:
-          completionTime.getTime() -
-          startTime,
-        output,
-      });
-    } catch (error) {
-      const completionTime =
-        new Date();
-
-      executions.push({
-        stepId: step.id,
-        order: step.order,
-        title: step.title,
-        tool: step.tool,
-        status: "failed",
-        startedAt: stepStartedAt,
-        completedAt:
-          completionTime.toISOString(),
-        durationMs:
-          completionTime.getTime() -
-          startTime,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      });
-
-      if (input.stopOnError === true) {
-        break;
-      }
+    if (
+      execution.status === "failed" &&
+      input.stopOnError === true
+    ) {
+      break;
     }
   }
 
@@ -431,7 +524,7 @@ export async function runAutonomousAgent(
         plan,
         executions,
       ),
-      STEP_TIMEOUT_MS,
+      stepTimeoutMs,
       "La synthèse finale",
     );
   }
@@ -469,3 +562,4 @@ export async function runAutonomousAgent(
       planner.model,
   };
 }
+
