@@ -51,3 +51,5 @@ browser-final-audit.zip
 build-error.txt
 tsconfig.backup-*.json
 universal-agent-audit.txt
+agent-runtime-audit-*/
+agent-runtime-audit-*.zip
