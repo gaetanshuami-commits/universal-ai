@@ -468,11 +468,60 @@ async function executeAgentStep(
     );
   }
 
-  return executeWithToolPipeline(
-    plan,
-    step,
-    executions,
-  );
+  try {
+    return await executeWithToolPipeline(
+      plan,
+      step,
+      executions,
+    );
+  } catch (error) {
+    /*
+     * Une indisponibilité temporaire de la recherche web
+     * ne doit pas bloquer toutes les étapes dépendantes.
+     *
+     * Le runtime bascule donc vers le modèle de langage
+     * uniquement pour web-search. Les erreurs des autres
+     * outils restent strictement propagées.
+     */
+    if (step.tool !== "web-search") {
+      throw error;
+    }
+
+    const toolError =
+      error instanceof Error
+        ? error.message
+        : String(error);
+
+    const recoveryStep: AgentPlanStep = {
+      ...step,
+      tool: "llm",
+      objective: [
+        step.objective,
+        "",
+        "La recherche web en temps réel n'a pas pu être exécutée.",
+        "Produis une alternative utile à partir des connaissances générales",
+        "et des résultats réellement obtenus lors des étapes précédentes.",
+        "N'affirme pas avoir consulté Internet.",
+        "N'invente aucune source, aucun lien ou donnée en temps réel.",
+        "Signale clairement les éléments qui nécessitent une vérification actuelle.",
+        `Erreur de l'outil web : ${toolError}`,
+      ].join("\n"),
+    };
+
+    const recoveredOutput =
+      await executeWithLanguageModel(
+        plan,
+        recoveryStep,
+        executions,
+      );
+
+    return [
+      "Mode de récupération : recherche web indisponible.",
+      "Les informations récentes devront être vérifiées avant utilisation.",
+      "",
+      recoveredOutput,
+    ].join("\n");
+  }
 }
 
 
